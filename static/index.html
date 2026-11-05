@@ -332,6 +332,8 @@ mark { background: var(--yellow); color: #1c1600; }
 const $ = id => document.getElementById(id);
 const esc = v => String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const wait = ms => new Promise(r => setTimeout(r, ms));
+const TALK_LABEL = 'TAP TO TALK (OR HOLD V)';
+const TAP_LISTEN_MS = 6000;
 const REVEAL_MS = 260; // Cosmetic stagger. The agents themselves finish in milliseconds.
 const SECOND_SEAT = new URLSearchParams(location.search).get('seat') === '2';
 const STATUS_WORDS = { status_boundaries: 'boundaries', status_fuel: 'fuel', status_ventilation: 'ventilation', status_firemain: 'firemain', status_lookouts: 'lookouts' };
@@ -340,10 +342,14 @@ let run = null, brief = null, overdue = [], doneIds = new Set(), started = 0, el
 let voiceOn = !SECOND_SEAT, drill = false, runId = 0, stepBusy = false, debriefShown = 0, changesSeen = 0;
 const spokenOverdue = new Set();
 
-async function api(path, body) {
+async function api(path, body, retried) {
   const options = { headers: { 'X-Session': token, 'Content-Type': 'application/json' } };
   if (body !== undefined) { options.method = 'POST'; options.body = JSON.stringify(body); }
   const r = await fetch(path, options);
+  if (r.status === 401 && !retried && path !== '/api/signin') {
+    await signIn(); // The server restarted, so sign back in and repeat the request.
+    return api(path, body, true);
+  }
   return { status: r.status, data: await r.json() };
 }
 function toast(text) {
@@ -721,7 +727,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'r' && run) speak(briefing());
   if (e.key === 'b') loadBrief(true);
   if (e.key === 's' && run) openSummary();
-  if (e.key.toLowerCase() === 'v' && !e.repeat) talk(true);
+  if (e.key.toLowerCase() === 'v' && !e.repeat && !window.DORE_STANDALONE) talk(true);
 });
 $('say').addEventListener('submit', e => { e.preventDefault(); $('report').blur(); activate($('report').value); });
 $('role').addEventListener('change', async e => {
@@ -780,54 +786,73 @@ async function pollVoice() {
     const { data } = await api('/api/voice/next');
     $('micLevel').textContent = 'LEVEL ' + data.level;
     const last = data.heard[data.heard.length - 1];
-    if (last && last.talking && JSON.stringify(last) !== pollVoice.last && !data.item) {
+    pollVoice.peak = data.peak;
+    if (pollVoice.last === undefined) pollVoice.last = JSON.stringify(data.heard[data.heard.length - 1] || null);
+    if (last && last.talking !== false && JSON.stringify(last) !== pollVoice.last && !data.item) {
       pollVoice.last = JSON.stringify(last);
-      $('listen').textContent = `IGNORED: ${last.text.slice(0, 44)} ${Math.round(last.confidence * 100)}%`;
+      pollVoice.heardSomething = true;
+      $('listen').textContent = `NOT SURE: ${last.text.replace('door', 'DORE').slice(0, 40)} ${Math.round(last.confidence * 100)}%`;
       $('listen').className = 'heard';
       clearTimeout(pollVoice.hold);
       pollVoice.holding = true;
       pollVoice.hold = setTimeout(() => { pollVoice.holding = false; }, 2500);
     }
     if (!pollVoice.holding) {
-      $('listen').textContent = !data.listening ? 'VOICE COMMANDS UNAVAILABLE' : talk.on ? 'LISTENING: SAY THE COMMAND' : 'HOLD V TO TALK';
-      $('listen').className = 'heard ' + (talk.on ? 'flash' : data.listening ? 'on' : '');
+      $('listen').textContent = !data.listening ? 'VOICE COMMANDS UNAVAILABLE' : !talk.on ? TALK_LABEL : data.running ? 'LISTENING: SAY THE COMMAND' : 'WAIT...';
+      $('listen').className = 'heard ' + (talk.on && data.running ? 'flash' : data.listening ? 'on' : '');
     }
     if (data.item) {
+      pollVoice.heardSomething = true;
       $('listen').textContent = 'HEARD: ' + data.item.phrase.toUpperCase();
       $('listen').className = 'heard flash';
       clearTimeout(pollVoice.hold);
       pollVoice.holding = true;
       pollVoice.hold = setTimeout(() => { pollVoice.holding = false; }, 2500);
+      if (talk.tapped) talk(false);
       runCommand(data.item.command);
     }
   } catch (e) { /* The next poll tries again. */ }
-  setTimeout(pollVoice, 350);
+  setTimeout(pollVoice, talk.on ? 120 : 350);
 }
 function talk(on) {
   if (!!talk.on === on) return;
   talk.on = on;
+  talk.tapped = false;
+  clearTimeout(talk.timer);
   if (on && window.speechSynthesis) speechSynthesis.cancel(); // Keying the mic interrupts DORE.
   pollVoice.holding = false;
-  $('listen').textContent = on ? 'LISTENING: SAY THE COMMAND' : 'HOLD V TO TALK';
-  $('listen').className = 'heard ' + (on ? 'flash' : 'on');
+  $('listen').textContent = on ? 'WAIT...' : TALK_LABEL;
+  $('listen').className = 'heard on';
   api('/api/voice/armed', { armed: on });
+  if (on) { pollVoice.heardSomething = false; return; }
+  setTimeout(() => {
+    if (talk.on || pollVoice.heardSomething) return;
+    toast((pollVoice.peak || 0) < 15 ? 'Mic is very quiet: move closer or raise input volume' : 'No command heard: try again');
+  }, 2600);
 }
-$('listen').addEventListener('pointerdown', () => talk(true));
-['pointerup', 'pointerleave'].forEach(n => $('listen').addEventListener(n, () => talk(false)));
-document.addEventListener('keyup', e => { if (e.key.toLowerCase() === 'v') talk(false); });
-window.addEventListener('blur', () => talk(false));
+// One tap listens for a few seconds and stops itself. Holding V still works.
+$('listen').addEventListener('click', () => {
+  if (talk.on) return talk(false);
+  talk(true);
+  talk.tapped = true;
+  talk.timer = setTimeout(() => talk(false), TAP_LISTEN_MS);
+});
+document.addEventListener('keyup', e => { if (e.key.toLowerCase() === 'v' && !talk.tapped) talk(false); });
+window.addEventListener('blur', () => { if (!talk.tapped) talk(false); });
 
 function tick() {
   $('clock').textContent = new Date().toISOString().slice(11, 19) + ' UTC';
-  $('net').textContent = navigator.onLine ? 'NO NETWORK NEEDED' : 'OFFLINE';
+  $('net').textContent = window.DORE_STANDALONE ? 'NO SERVER NEEDED' : navigator.onLine ? 'NO NETWORK NEEDED' : 'OFFLINE';
   if (run && !run.ended) { $('elapsed').textContent = clock(elapsedNow); }
 }
 (async () => {
+  if (location.protocol === 'file:' && !window.DORE_STANDALONE) { location.replace('../DORE-Afloat.html'); return; }
   config = (await api('/api/config')).data;
   me.pack = config.packs[0].id;
   $('ship').innerHTML = config.packs.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
   $('role').innerHTML = Object.keys(config.roles).map(r => `<option value="${esc(r)}">${esc(r)}</option>`).join('');
   $('role').value = me.role;
+  if (window.DORE_STANDALONE) { ['listen', 'micLevel', 'seat'].forEach(id => { $(id).hidden = true; }); $('net').textContent = 'NO SERVER NEEDED'; }
   if (SECOND_SEAT) { $('voice').textContent = 'VOICE OFF'; $('voice').classList.remove('on'); $('listen').hidden = true; $('micLevel').hidden = true; }
   drawButtons();
   await signIn();
@@ -835,7 +860,7 @@ function tick() {
   clearScreen();
   tick(); setInterval(tick, 1000);
   pollState();
-  if (!SECOND_SEAT) pollVoice();
+  if (!SECOND_SEAT && !window.DORE_STANDALONE) pollVoice();
 })();
 </script>
 </body>

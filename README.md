@@ -8,6 +8,18 @@ python dore-afloat/server.py
 
 Then open http://127.0.0.1:8765.
 
+**No server option:** double-click `DORE-Afloat.html`. It mirrors the server version, with everything built in, except for voice commands and the second seat, which need the server. Its data resets when the page reloads.
+
+After changing the screen, ship packs or library, rebuild it and check that it still matches the server:
+
+```bash
+python dore-afloat/build_standalone.py
+```
+
+```bash
+python dore-afloat/check_parity.py
+```
+
 All ships, procedures and data are fictional and notional. Nothing here is Navy doctrine. The agents are rule-based code, not AI models.
 
 | Agent | Product |
@@ -60,7 +72,7 @@ Each role sees its own DO NOW step, plus a Who Has What board showing every step
 
 ## Voice commands
 
-Voice is push-to-talk, like a radio. Hold **V** or the on-screen label, wait for LISTENING, say the command, then release. All other sound is ignored, and keying the mic interrupts DORE's readout. On Windows it runs offline through the built-in speech recognizer, with nothing to install.
+Voice is push-to-talk, like a radio. Tap the blue talk button, or hold **V**, wait for the green LISTENING label, then say the command. A tap listens for up to 6 seconds. All other sound is ignored, and keying the mic interrupts DORE's readout. On Windows it runs offline through the built-in speech recognizer, with nothing to install.
 
 | Say | What happens |
 | --- | --- |

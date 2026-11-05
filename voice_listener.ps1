@@ -1,6 +1,6 @@
 # Offline voice commands for the DORE Afloat demo, using the Windows speech recognizer.
 # The server starts this script. "DORE" is listed as "door" because that is how it sounds.
-param([int]$Port = 8765, [double]$MinConfidence = 0.7, [string]$Wav = "")
+param([int]$Port = 8765, [double]$MinConfidence = 0.5, [double]$RecordConfidence = 0.6, [string]$Wav = "")
 
 Add-Type -AssemblyName System.Speech
 [System.Net.WebRequest]::DefaultWebProxy = $null  # Local calls only; skips slow proxy lookup.
@@ -40,8 +40,11 @@ $engine.BabbleTimeout = [TimeSpan]::FromSeconds(4)
 $engine.EndSilenceTimeout = [TimeSpan]::FromSeconds(0.4)
 
 function Find-Command($result) {
-    if (-not $result -or $result.Confidence -lt $MinConfidence) { return $null }
-    if ($commands.ContainsKey($result.Text)) { return $result.Text }
+    # Push-to-talk gates the mic, so the bar can sit low. Commands that change the record need more.
+    if (-not $result -or -not $commands.ContainsKey($result.Text)) { return $null }
+    $changesRecord = $commands[$result.Text] -eq "done" -or $commands[$result.Text] -eq "end" -or $commands[$result.Text] -like "status_*"
+    $needed = if ($changesRecord) { $RecordConfidence } else { $MinConfidence }
+    if ($result.Confidence -ge $needed) { return $result.Text }
     return $null
 }
 
@@ -88,7 +91,7 @@ while ($failures -lt 30) {  # Stop once the server has gone away.
                 Send-Voice "heard" "$($result.Text)" $result.Confidence | Out-Null
             }
         }
-        $state = Send-Voice "level" "" $engine.AudioLevel
+        $state = Send-Voice "level" $(if ($running) { "running" } else { "idle" }) $engine.AudioLevel
         if ($state.talk -and -not $running) {
             $engine.RecognizeAsync([System.Speech.Recognition.RecognizeMode]::Multiple)
             $running = $true

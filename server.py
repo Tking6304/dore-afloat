@@ -53,7 +53,7 @@ ROLES = {
 sessions = {}  # token -> {"name", "role", "pack"}
 incident = {}  # the open incident
 counters = {"incident": int(time.time())}  # Unique across restarts, so open screens notice a new casualty.
-voice = {"queue": [], "listener": None, "level": 0, "peak": 0, "heard": [],
+voice = {"queue": [], "listener": None, "level": 0, "peak": 0, "running": False, "heard": [],
          "armed": False, "armed_at": 0.0, "released_at": 0.0, "armed_until": 0.0, "next_ok": 0.0}  # Heard text stays in memory only.
 db = sqlite3.connect(DB_PATH, check_same_thread=False)
 state_lock = threading.Lock()  # One request at a time touches shared state.
@@ -583,7 +583,7 @@ class Handler(BaseHTTPRequestHandler):
             item = voice["queue"].pop(0) if voice["queue"] else None
             listener = voice["listener"]
             self.send_json(200, {"item": item, "listening": bool(listener and listener.poll() is None),
-                                 "level": voice["level"], "peak": voice["peak"], "armed": voice["armed"], "heard": voice["heard"][-10:]})
+                                 "level": voice["level"], "peak": voice["peak"], "armed": voice["armed"], "running": voice["running"], "heard": voice["heard"][-10:]})
         elif path == "/api/state":
             if not self.user():
                 return self.send_json(401, {"error": "Sign in first."})
@@ -656,6 +656,7 @@ class Handler(BaseHTTPRequestHandler):
             if body.get("command") == "level":
                 voice["level"] = int(body.get("confidence", 0))
                 voice["peak"] = max(voice["peak"], voice["level"])
+                voice["running"] = body.get("phrase") == "running"
             elif body.get("command") == "heard":
                 voice["heard"].append({"text": str(body.get("phrase", ""))[:120], "confidence": round(float(body.get("confidence", 0)), 2)})
                 del voice["heard"][:-10]
@@ -697,6 +698,8 @@ class Handler(BaseHTTPRequestHandler):
             voice["armed"] = bool(body.get("armed"))
             if voice["armed"]:
                 voice["armed_at"] = time.time()
+                voice["peak"] = 0
+                voice["heard"].clear()
                 voice["queue"].clear()
             else:
                 voice["released_at"] = time.time()
