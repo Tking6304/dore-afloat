@@ -1,0 +1,8 @@
+NOTIONAL DEMO DOCUMENT. NOT NAVY DOCTRINE. NOT FOR OPERATIONAL USE.
+Written for the DORE Afloat concept demo. Demo Ship Alpha is fictional.
+
+DS-SOP-TAG-01 Rev A: Tagged Equipment
+
+2. Rules
+2.1 Equipment under an active tag-out shall not be operated until the authorizing officer clears the tag-out.
+2.2 During a casualty, use the next approved option and report the tagged equipment to the Engineering Officer of the Watch.

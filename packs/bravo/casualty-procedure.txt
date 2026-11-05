@@ -1,0 +1,13 @@
+NOTIONAL DEMO DOCUMENT. NOT NAVY DOCTRINE. NOT FOR OPERATIONAL USE.
+Written for the DORE Afloat concept demo. Demo Ship Bravo is fictional.
+
+DS-B-CCP-07 Rev C: Diesel Space Fire
+
+4. Immediate actions
+4.1 Report the fire to the Damage Control Central watch and sound the alarm.
+4.2 Trip the diesel engine and close the fuel quick-closing valves for the affected space.
+4.3 Secure supply and exhaust fans to the affected space.
+4.4 Start Fire Pump 1 and pressurize the forward firemain loop.
+4.5 If Fire Pump 1 is unavailable, start the emergency diesel fire pump.
+4.5.1 If the emergency diesel fire pump is unavailable, rig the portable fire pump.
+4.6 Set fire boundaries around the affected space.

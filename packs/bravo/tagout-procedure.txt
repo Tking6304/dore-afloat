@@ -1,0 +1,7 @@
+NOTIONAL DEMO DOCUMENT. NOT NAVY DOCTRINE. NOT FOR OPERATIONAL USE.
+Written for the DORE Afloat concept demo. Demo Ship Bravo is fictional.
+
+DS-B-SOP-03 Rev B: Tagged Equipment
+
+1. Rules
+1.1 Equipment under an active tag-out shall not be operated until the authorizing officer clears the tag-out.

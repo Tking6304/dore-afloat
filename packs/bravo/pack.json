@@ -1,0 +1,299 @@
+{
+  "ship": {
+    "name": "Demo Ship Bravo",
+    "type": "Fictional diesel ship"
+  },
+  "documents": {
+    "CCP": {
+      "title": "DS-B-CCP-07 Diesel Space Fire",
+      "rev": "Rev C",
+      "file": "casualty-procedure.txt"
+    },
+    "TAG": {
+      "title": "DS-B-SOP-03 Tagged Equipment",
+      "rev": "Rev B",
+      "file": "tagout-procedure.txt"
+    }
+  },
+  "spaces": {
+    "DER2": {
+      "name": "Diesel Engine Room 2",
+      "aliases": [
+        "diesel engine room 2",
+        "diesel engine room two",
+        "engine room 2",
+        "engine room two",
+        "der2",
+        "der 2"
+      ]
+    }
+  },
+  "sensor_tolerance": {
+    "F": 150
+  },
+  "casualties": [
+    {
+      "id": "diesel-space-fire",
+      "name": "Diesel Space Fire",
+      "button": "FIRE",
+      "sample_report": "Flames in diesel engine room 2, space filling with smoke",
+      "keywords": [
+        "fire",
+        "flames",
+        "flame",
+        "smoke",
+        "burning"
+      ],
+      "requires_space": true,
+      "severity": "CRITICAL",
+      "actions": [
+        {
+          "id": "B1",
+          "rank": 1,
+          "owner": "Damage Control Central",
+          "title": "Report the fire and sound the alarm",
+          "doc": "CCP",
+          "para": "4.1",
+          "quote": "Report the fire to the Damage Control Central watch and sound the alarm.",
+          "needs": []
+        },
+        {
+          "id": "B2",
+          "rank": 2,
+          "owner": "Engineering Watch",
+          "title": "Trip the diesel, close fuel valves",
+          "doc": "CCP",
+          "para": "4.2",
+          "quote": "Trip the diesel engine and close the fuel quick-closing valves for the affected space.",
+          "needs": [
+            "DE-2"
+          ],
+          "status": "fuel"
+        },
+        {
+          "id": "B3",
+          "rank": 3,
+          "owner": "Engineering Watch",
+          "title": "Secure supply and exhaust fans",
+          "doc": "CCP",
+          "para": "4.3",
+          "quote": "Secure supply and exhaust fans to the affected space.",
+          "needs": [
+            "FAN-2"
+          ],
+          "status": "ventilation"
+        },
+        {
+          "id": "B4",
+          "rank": 4,
+          "owner": "Fire Party",
+          "title": "Start Fire Pump 1",
+          "doc": "CCP",
+          "para": "4.4",
+          "quote": "Start Fire Pump 1 and pressurize the forward firemain loop.",
+          "needs": [
+            "FP-1"
+          ],
+          "status": "firemain"
+        },
+        {
+          "id": "B5",
+          "rank": 5,
+          "owner": "Fire Party",
+          "title": "Start the emergency diesel fire pump",
+          "doc": "CCP",
+          "para": "4.5",
+          "quote": "If Fire Pump 1 is unavailable, start the emergency diesel fire pump.",
+          "needs": [
+            "EDFP"
+          ],
+          "only_if_blocked": "B4",
+          "status": "firemain"
+        },
+        {
+          "id": "B6",
+          "rank": 6,
+          "owner": "Fire Party",
+          "title": "Set fire boundaries",
+          "doc": "CCP",
+          "para": "4.6",
+          "quote": "Set fire boundaries around the affected space.",
+          "needs": [],
+          "status": "boundaries"
+        },
+        {
+          "id": "B5B",
+          "rank": 5.5,
+          "owner": "Fire Party",
+          "title": "Rig the portable fire pump",
+          "doc": "CCP",
+          "para": "4.5.1",
+          "quote": "If the emergency diesel fire pump is unavailable, rig the portable fire pump.",
+          "needs": [
+            "PFP-1"
+          ],
+          "only_if_blocked": "B5",
+          "status": "firemain"
+        }
+      ],
+      "comms": [
+        {
+          "channel": "1MC Announcement",
+          "text": "Fire, fire, fire. Fire in {location}. Away the fire party. All hands stand clear of {location}.",
+          "speaker": "Damage Control Central"
+        },
+        {
+          "channel": "Report to Bridge",
+          "text": "Bridge, DCC. Fire in {location}. Diesel tripped and fans being secured. {status}",
+          "speaker": "Damage Control Central"
+        },
+        {
+          "channel": "Report to Fire Party",
+          "text": "Fire party, DCC. Fire in {location}. Set boundaries. {status}",
+          "speaker": "Damage Control Central"
+        }
+      ],
+      "injects": [
+        {
+          "id": "edfp",
+          "label": "EMERGENCY PUMP FAILS",
+          "equipment": "EDFP"
+        }
+      ]
+    }
+  ],
+  "equipment": [
+    {
+      "id": "DE-2",
+      "name": "Diesel Engine 2",
+      "space": "DER2",
+      "state": "Running"
+    },
+    {
+      "id": "FAN-2",
+      "name": "DER 2 Supply Fan",
+      "space": "DER2",
+      "state": "Running"
+    },
+    {
+      "id": "FP-1",
+      "name": "Fire Pump 1",
+      "space": "DER2",
+      "state": "Tagged out"
+    },
+    {
+      "id": "EDFP",
+      "name": "Emergency Diesel Fire Pump",
+      "space": "EGEN",
+      "state": "Standby"
+    },
+    {
+      "id": "PFP-1",
+      "name": "Portable Fire Pump",
+      "space": "FIRE",
+      "state": "Ready"
+    }
+  ],
+  "tagouts": [
+    {
+      "id": "TO-2291",
+      "equipment": "FP-1",
+      "reason": "Impeller inspection",
+      "authorized_by": "Demo Chief Engineer",
+      "status": "Active",
+      "rule": {
+        "doc": "TAG",
+        "para": "1.1",
+        "quote": "Equipment under an active tag-out shall not be operated until the authorizing officer clears the tag-out."
+      }
+    }
+  ],
+  "sensors": [
+    {
+      "id": "T-201",
+      "name": "DER 2 Temp Forward",
+      "space": "DER2",
+      "value": 355,
+      "unit": "F",
+      "age_s": 2
+    },
+    {
+      "id": "T-202",
+      "name": "DER 2 Temp Aft",
+      "space": "DER2",
+      "value": 340,
+      "unit": "F",
+      "age_s": 4
+    }
+  ],
+  "role_stations": {
+    "EOOW": [
+      "Engineering Watch"
+    ],
+    "DCA": [
+      "Damage Control Central",
+      "Fire Party"
+    ],
+    "OOD": [
+      "Bridge"
+    ]
+  },
+  "map": {
+    "spaces": [
+      {
+        "id": "BRIDGE",
+        "label": "BRIDGE",
+        "x": 620,
+        "y": 12,
+        "w": 170,
+        "h": 38
+      },
+      {
+        "id": "TOPSIDE",
+        "label": "TOPSIDE",
+        "x": 60,
+        "y": 54,
+        "w": 880,
+        "h": 32
+      },
+      {
+        "id": "FIRE",
+        "label": "FIRE LOCKER",
+        "x": 160,
+        "y": 92,
+        "w": 150,
+        "h": 92
+      },
+      {
+        "id": "DER1",
+        "label": "DIESEL ENG RM 1",
+        "x": 316,
+        "y": 92,
+        "w": 150,
+        "h": 92
+      },
+      {
+        "id": "DER2",
+        "label": "DIESEL ENG RM 2",
+        "x": 472,
+        "y": 92,
+        "w": 150,
+        "h": 92
+      },
+      {
+        "id": "EGEN",
+        "label": "EMERGENCY GEN",
+        "x": 628,
+        "y": 92,
+        "w": 150,
+        "h": 92
+      }
+    ],
+    "boundaries": {
+      "DER2": [
+        "DER1",
+        "EGEN"
+      ]
+    }
+  }
+}

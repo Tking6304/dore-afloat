@@ -1,0 +1,14 @@
+NOTIONAL DEMO DOCUMENT. NOT NAVY DOCTRINE. NOT FOR OPERATIONAL USE.
+Written for the DORE Afloat concept demo. Demo Ship Alpha is fictional.
+
+DS-CCP-COL-02 Rev A: Collision and Flooding
+
+2. Immediate actions
+2.1 Sound the collision alarm and pass the word on the general announcing system.
+2.2 Set maximum watertight integrity throughout the ship.
+2.3 Report damage, flooding and injuries to Damage Control Central.
+2.4 Start Main Drainage Eductor 2 to dewater the affected space.
+2.5 If Main Drainage Eductor 2 is unavailable, rig the portable dewatering pump.
+2.5.1 If the portable dewatering pump is unavailable, start Eductor 1 and align it through the cross-connect.
+2.6 Set flooding boundaries around the affected space.
+2.7 Muster all hands and report missing personnel to the bridge.

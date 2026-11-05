@@ -1,0 +1,743 @@
+{
+  "ship": {
+    "name": "Demo Ship Alpha",
+    "type": "Fictional gas turbine ship"
+  },
+  "documents": {
+    "CCP": {
+      "title": "DS-CCP-FIRE-01 Main Space Fire",
+      "rev": "Rev A",
+      "file": "casualty-procedure.txt"
+    },
+    "COL": {
+      "title": "DS-CCP-COL-02 Collision and Flooding",
+      "rev": "Rev A",
+      "file": "collision-procedure.txt"
+    },
+    "MOB": {
+      "title": "DS-CCP-MOB-03 Man Overboard",
+      "rev": "Rev A",
+      "file": "overboard-procedure.txt"
+    },
+    "TAG": {
+      "title": "DS-SOP-TAG-01 Tagged Equipment",
+      "rev": "Rev A",
+      "file": "tagout-procedure.txt"
+    }
+  },
+  "spaces": {
+    "MER1": {
+      "name": "Main Engine Room 1",
+      "aliases": [
+        "main engine room 1",
+        "main engine room one",
+        "engine room 1",
+        "engine room one",
+        "mer1",
+        "mer 1"
+      ]
+    },
+    "FPR": {
+      "name": "Forward Pump Room",
+      "aliases": [
+        "forward pump room",
+        "pump room"
+      ]
+    },
+    "TOPSIDE": {
+      "name": "Topside",
+      "aliases": [
+        "topside",
+        "flight deck",
+        "fantail"
+      ]
+    }
+  },
+  "sensor_tolerance": {
+    "F": 150,
+    "in": 12
+  },
+  "casualties": [
+    {
+      "id": "main-space-fire",
+      "name": "Main Space Fire",
+      "button": "FIRE",
+      "sample_report": "Fire in main engine room 1, heavy smoke near the fuel pumps",
+      "keywords": [
+        "fire",
+        "flames",
+        "flame",
+        "smoke",
+        "burning",
+        "flashover"
+      ],
+      "requires_space": true,
+      "severity": "CRITICAL",
+      "actions": [
+        {
+          "id": "A1",
+          "rank": 1,
+          "owner": "Central Control",
+          "title": "Report the fire and sound the alarm",
+          "doc": "CCP",
+          "para": "3.1",
+          "quote": "Report the fire to Central Control and sound the alarm.",
+          "needs": []
+        },
+        {
+          "id": "A2",
+          "rank": 2,
+          "owner": "Central Control",
+          "title": "Stop fuel to the space",
+          "doc": "CCP",
+          "para": "3.2",
+          "quote": "Stop fuel to the affected space.",
+          "needs": [
+            "FOSP-1"
+          ],
+          "status": "fuel"
+        },
+        {
+          "id": "A3",
+          "rank": 3,
+          "owner": "Central Control",
+          "title": "Secure ventilation",
+          "doc": "CCP",
+          "para": "3.3",
+          "quote": "Secure ventilation to the affected space before setting boundaries.",
+          "needs": [
+            "VENT-1"
+          ],
+          "status": "ventilation"
+        },
+        {
+          "id": "A4",
+          "rank": 4,
+          "owner": "Repair 5",
+          "title": "Start Fire Pump 2",
+          "doc": "CCP",
+          "para": "3.4",
+          "quote": "Start Fire Pump 2 to pressurize the firemain for the affected zone.",
+          "needs": [
+            "FP-2"
+          ],
+          "status": "firemain"
+        },
+        {
+          "id": "A5",
+          "rank": 5,
+          "owner": "Repair 5",
+          "title": "Start Fire Pump 3, open cross-connect",
+          "doc": "CCP",
+          "para": "3.5",
+          "quote": "If Fire Pump 2 is unavailable, start Fire Pump 3 and open the firemain cross-connect valve.",
+          "needs": [
+            "FP-3"
+          ],
+          "only_if_blocked": "A4",
+          "status": "firemain"
+        },
+        {
+          "id": "A6",
+          "rank": 6,
+          "owner": "Electrical Watch",
+          "title": "Shift electrical load",
+          "doc": "CCP",
+          "para": "3.6",
+          "quote": "Shift electrical load away from generators in the affected space.",
+          "needs": [
+            "GTG-1"
+          ]
+        },
+        {
+          "id": "A7",
+          "rank": 7,
+          "owner": "Repair 2",
+          "title": "Set fire boundaries, all six sides",
+          "doc": "CCP",
+          "para": "3.7",
+          "quote": "Set fire boundaries on all six sides of the affected space.",
+          "needs": [],
+          "status": "boundaries"
+        },
+        {
+          "id": "A8",
+          "rank": 8,
+          "owner": "Damage Control Central",
+          "title": "Hold agent until space is isolated",
+          "doc": "CCP",
+          "para": "3.8",
+          "quote": "Do not release the fixed extinguishing agent until all personnel are accounted for and the space is confirmed isolated.",
+          "needs": []
+        },
+        {
+          "id": "X1",
+          "rank": 9,
+          "owner": "Repair 2",
+          "title": "Flood the space immediately",
+          "doc": "CCP",
+          "para": "3.9",
+          "quote": "Immediately flood the space with seawater to extinguish the fire.",
+          "needs": []
+        },
+        {
+          "id": "A5B",
+          "rank": 5.5,
+          "owner": "Repair 5",
+          "title": "Start the Emergency Fire Pump",
+          "doc": "CCP",
+          "para": "3.5.1",
+          "quote": "If Fire Pump 3 is also unavailable, start the Emergency Fire Pump and align it to the firemain.",
+          "needs": [
+            "EFP-1"
+          ],
+          "only_if_blocked": "A5",
+          "status": "firemain"
+        }
+      ],
+      "comms": [
+        {
+          "channel": "1MC Announcement",
+          "text": "Fire, fire, fire. Fire in {location}. Away the duty fire team. All hands stand clear of {location}.",
+          "speaker": "Bridge"
+        },
+        {
+          "channel": "Report to Bridge",
+          "text": "Bridge, Central Control. Fire in {location}. Fuel and ventilation being secured. {status} Will report when boundaries are set.",
+          "speaker": "Central Control"
+        },
+        {
+          "channel": "Report to DCC",
+          "text": "DCC, Central Control. Class of fire to be confirmed in {location}. Set boundaries on all six sides. {status}",
+          "speaker": "Central Control"
+        }
+      ],
+      "injects": [
+        {
+          "id": "fp3",
+          "label": "FIRE PUMP 3 FAILS",
+          "equipment": "FP-3"
+        }
+      ]
+    },
+    {
+      "id": "collision",
+      "name": "Collision and Flooding",
+      "button": "COLLISION",
+      "sample_report": "Collision forward, flooding in the forward pump room",
+      "keywords": [
+        "collision",
+        "collided",
+        "struck",
+        "rammed",
+        "flooding"
+      ],
+      "requires_space": false,
+      "default_space": "FPR",
+      "severity": "CRITICAL",
+      "actions": [
+        {
+          "id": "C1",
+          "rank": 1,
+          "owner": "Bridge",
+          "title": "Sound the collision alarm",
+          "doc": "COL",
+          "para": "2.1",
+          "quote": "Sound the collision alarm and pass the word on the general announcing system.",
+          "needs": []
+        },
+        {
+          "id": "C2",
+          "rank": 2,
+          "owner": "All Repair Lockers",
+          "title": "Set maximum watertight integrity",
+          "doc": "COL",
+          "para": "2.2",
+          "quote": "Set maximum watertight integrity throughout the ship.",
+          "needs": []
+        },
+        {
+          "id": "C3",
+          "rank": 3,
+          "owner": "Repair 2",
+          "title": "Report damage, flooding and injuries",
+          "doc": "COL",
+          "para": "2.3",
+          "quote": "Report damage, flooding and injuries to Damage Control Central.",
+          "needs": []
+        },
+        {
+          "id": "C4",
+          "rank": 4,
+          "owner": "Repair 2",
+          "title": "Start Main Drainage Eductor 2",
+          "doc": "COL",
+          "para": "2.4",
+          "quote": "Start Main Drainage Eductor 2 to dewater the affected space.",
+          "needs": [
+            "MDE-2"
+          ]
+        },
+        {
+          "id": "C5",
+          "rank": 5,
+          "owner": "Repair 2",
+          "title": "Rig the portable dewatering pump",
+          "doc": "COL",
+          "para": "2.5",
+          "quote": "If Main Drainage Eductor 2 is unavailable, rig the portable dewatering pump.",
+          "needs": [
+            "PDP-1"
+          ],
+          "only_if_blocked": "C4"
+        },
+        {
+          "id": "C6",
+          "rank": 6,
+          "owner": "Repair 3",
+          "title": "Set flooding boundaries",
+          "doc": "COL",
+          "para": "2.6",
+          "quote": "Set flooding boundaries around the affected space.",
+          "needs": [],
+          "status": "boundaries"
+        },
+        {
+          "id": "C7",
+          "rank": 7,
+          "owner": "Damage Control Central",
+          "title": "Muster all hands",
+          "doc": "COL",
+          "para": "2.7",
+          "quote": "Muster all hands and report missing personnel to the bridge.",
+          "needs": []
+        },
+        {
+          "id": "C5B",
+          "rank": 5.5,
+          "owner": "Repair 2",
+          "title": "Start Eductor 1 through the cross-connect",
+          "doc": "COL",
+          "para": "2.5.1",
+          "quote": "If the portable dewatering pump is unavailable, start Eductor 1 and align it through the cross-connect.",
+          "needs": [
+            "EDU-1"
+          ],
+          "only_if_blocked": "C5"
+        }
+      ],
+      "comms": [
+        {
+          "channel": "1MC Announcement",
+          "text": "Collision, collision, collision. Flooding reported in {location}. All hands set maximum watertight integrity. Muster and report.",
+          "speaker": "Bridge"
+        },
+        {
+          "channel": "Report to Bridge",
+          "text": "Bridge, DCC. Flooding in {location}. Boundaries being set. {status} Will report rate of flooding.",
+          "speaker": "Damage Control Central"
+        },
+        {
+          "channel": "Report to Repair 2",
+          "text": "Repair 2, DCC. Investigate {location}. Report damage, flooding and injuries. {status}",
+          "speaker": "Damage Control Central"
+        }
+      ],
+      "injects": [
+        {
+          "id": "pdp",
+          "label": "DEWATERING PUMP FAILS",
+          "equipment": "PDP-1"
+        }
+      ]
+    },
+    {
+      "id": "man-overboard",
+      "name": "Man Overboard",
+      "button": "MAN OVERBOARD",
+      "sample_report": "Man overboard, port side",
+      "keywords": [
+        "overboard",
+        "mob"
+      ],
+      "requires_space": false,
+      "default_space": "TOPSIDE",
+      "severity": "CRITICAL",
+      "actions": [
+        {
+          "id": "M1",
+          "rank": 1,
+          "owner": "Bridge",
+          "title": "Pass the word: man overboard, {side}",
+          "doc": "MOB",
+          "para": "2.1",
+          "quote": "Pass the word man overboard and state the side.",
+          "needs": []
+        },
+        {
+          "id": "M2",
+          "rank": 2,
+          "owner": "Lookouts",
+          "title": "Post lookouts, keep the person in sight",
+          "doc": "MOB",
+          "para": "2.2",
+          "quote": "Post lookouts and keep the person in sight.",
+          "needs": [],
+          "status": "lookouts"
+        },
+        {
+          "id": "M3",
+          "rank": 3,
+          "owner": "Navigator",
+          "title": "Mark position and log the time",
+          "doc": "MOB",
+          "para": "2.3",
+          "quote": "Mark the position on the navigation display and log the time.",
+          "needs": []
+        },
+        {
+          "id": "M4",
+          "rank": 4,
+          "owner": "Bridge",
+          "title": "Turn toward {side}, keep stern clear",
+          "doc": "MOB",
+          "para": "2.4",
+          "quote": "Turn the ship toward the side the person fell from to keep the stern clear.",
+          "needs": []
+        },
+        {
+          "id": "M5",
+          "rank": 5,
+          "owner": "Boat Crew",
+          "title": "Launch rescue boat with Davit 1",
+          "doc": "MOB",
+          "para": "2.5",
+          "quote": "Launch the rescue boat using Davit 1.",
+          "needs": [
+            "DAV-1"
+          ]
+        },
+        {
+          "id": "M6",
+          "rank": 6,
+          "owner": "Boat Crew",
+          "title": "Rig recovery net, stand by swimmer",
+          "doc": "MOB",
+          "para": "2.6",
+          "quote": "If Davit 1 is unavailable, rig the recovery net and stand by the rescue swimmer.",
+          "needs": [
+            "NET-1"
+          ],
+          "only_if_blocked": "M5"
+        },
+        {
+          "id": "M7",
+          "rank": 7,
+          "owner": "Division Officers",
+          "title": "Muster all hands",
+          "doc": "MOB",
+          "para": "2.7",
+          "quote": "Muster all hands and report missing personnel to the bridge.",
+          "needs": []
+        },
+        {
+          "id": "M6B",
+          "rank": 6.5,
+          "owner": "Boat Crew",
+          "title": "Rig the Jacob's ladder, stand by swimmer",
+          "doc": "MOB",
+          "para": "2.6.1",
+          "quote": "If the recovery net is unavailable, rig the Jacob's ladder and stand by the rescue swimmer.",
+          "needs": [
+            "JAC-1"
+          ],
+          "only_if_blocked": "M6"
+        }
+      ],
+      "comms": [
+        {
+          "channel": "1MC Announcement",
+          "text": "Man overboard, {side}. Man overboard, {side}. All hands muster and report.",
+          "speaker": "Bridge"
+        },
+        {
+          "channel": "Report to CO",
+          "text": "Captain, Bridge. Man overboard, {side}. Position marked. Lookouts posted. {status}",
+          "speaker": "Bridge"
+        },
+        {
+          "channel": "Report to Boat Crew",
+          "text": "Boat crew, Bridge. Man overboard, {side}. {status} Stand by for recovery.",
+          "speaker": "Bridge"
+        }
+      ],
+      "injects": [
+        {
+          "id": "net",
+          "label": "RECOVERY NET FOULED",
+          "equipment": "NET-1"
+        }
+      ]
+    }
+  ],
+  "equipment": [
+    {
+      "id": "FOSP-1",
+      "name": "Fuel Oil Service Pump 1",
+      "space": "MER1",
+      "state": "Running"
+    },
+    {
+      "id": "VENT-1",
+      "name": "MER 1 Supply Fan",
+      "space": "MER1",
+      "state": "Running"
+    },
+    {
+      "id": "GTG-1",
+      "name": "Generator 1",
+      "space": "MER1",
+      "state": "Online"
+    },
+    {
+      "id": "FP-2",
+      "name": "Fire Pump 2",
+      "space": "AUX1",
+      "state": "Tagged out"
+    },
+    {
+      "id": "FP-3",
+      "name": "Fire Pump 3",
+      "space": "AUX1",
+      "state": "Standby"
+    },
+    {
+      "id": "MDE-2",
+      "name": "Main Drainage Eductor 2",
+      "space": "FPR",
+      "state": "Tagged out"
+    },
+    {
+      "id": "PDP-1",
+      "name": "Portable Dewatering Pump",
+      "space": "REP2",
+      "state": "Ready"
+    },
+    {
+      "id": "DAV-1",
+      "name": "Davit 1",
+      "space": "TOPSIDE",
+      "state": "Tagged out"
+    },
+    {
+      "id": "NET-1",
+      "name": "Recovery Net",
+      "space": "TOPSIDE",
+      "state": "Ready"
+    },
+    {
+      "id": "EFP-1",
+      "name": "Emergency Fire Pump",
+      "space": "MER2",
+      "state": "Standby"
+    },
+    {
+      "id": "EDU-1",
+      "name": "Eductor 1",
+      "space": "AUX1",
+      "state": "Standby"
+    },
+    {
+      "id": "JAC-1",
+      "name": "Jacob's Ladder",
+      "space": "TOPSIDE",
+      "state": "Ready"
+    }
+  ],
+  "tagouts": [
+    {
+      "id": "TO-0417",
+      "equipment": "FP-2",
+      "reason": "Mechanical seal replacement",
+      "authorized_by": "Demo Engineer Officer",
+      "status": "Active",
+      "rule": {
+        "doc": "TAG",
+        "para": "2.1",
+        "quote": "Equipment under an active tag-out shall not be operated until the authorizing officer clears the tag-out."
+      }
+    },
+    {
+      "id": "TO-0422",
+      "equipment": "MDE-2",
+      "reason": "Valve repair",
+      "authorized_by": "Demo Engineer Officer",
+      "status": "Active",
+      "rule": {
+        "doc": "TAG",
+        "para": "2.1",
+        "quote": "Equipment under an active tag-out shall not be operated until the authorizing officer clears the tag-out."
+      }
+    },
+    {
+      "id": "TO-0431",
+      "equipment": "DAV-1",
+      "reason": "Winch brake inspection",
+      "authorized_by": "Demo First Lieutenant",
+      "status": "Active",
+      "rule": {
+        "doc": "TAG",
+        "para": "2.1",
+        "quote": "Equipment under an active tag-out shall not be operated until the authorizing officer clears the tag-out."
+      }
+    }
+  ],
+  "sensors": [
+    {
+      "id": "T-101",
+      "name": "MER 1 Temp Upper",
+      "space": "MER1",
+      "value": 412,
+      "unit": "F",
+      "age_s": 2
+    },
+    {
+      "id": "T-102",
+      "name": "MER 1 Temp Mid",
+      "space": "MER1",
+      "value": 388,
+      "unit": "F",
+      "age_s": 3
+    },
+    {
+      "id": "T-103",
+      "name": "MER 1 Temp Lower",
+      "space": "MER1",
+      "value": 96,
+      "unit": "F",
+      "age_s": 340
+    },
+    {
+      "id": "L-201",
+      "name": "Pump Room Level Port",
+      "space": "FPR",
+      "value": 34,
+      "unit": "in",
+      "age_s": 2
+    },
+    {
+      "id": "L-202",
+      "name": "Pump Room Level Center",
+      "space": "FPR",
+      "value": 31,
+      "unit": "in",
+      "age_s": 3
+    },
+    {
+      "id": "L-203",
+      "name": "Pump Room Level Starboard",
+      "space": "FPR",
+      "value": 2,
+      "unit": "in",
+      "age_s": 410
+    }
+  ],
+  "role_stations": {
+    "EOOW": [
+      "Central Control",
+      "Electrical Watch"
+    ],
+    "DCA": [
+      "Damage Control Central",
+      "Repair 2",
+      "Repair 3",
+      "Repair 5",
+      "All Repair Lockers"
+    ],
+    "OOD": [
+      "Bridge",
+      "Navigator",
+      "Lookouts",
+      "Boat Crew",
+      "Division Officers"
+    ]
+  },
+  "map": {
+    "spaces": [
+      {
+        "id": "BRIDGE",
+        "label": "BRIDGE",
+        "x": 250,
+        "y": 12,
+        "w": 170,
+        "h": 38
+      },
+      {
+        "id": "TOPSIDE",
+        "label": "TOPSIDE",
+        "x": 60,
+        "y": 54,
+        "w": 880,
+        "h": 32
+      },
+      {
+        "id": "FPR",
+        "label": "FWD PUMP ROOM",
+        "x": 120,
+        "y": 92,
+        "w": 122,
+        "h": 92
+      },
+      {
+        "id": "REP2",
+        "label": "REPAIR 2",
+        "x": 246,
+        "y": 92,
+        "w": 122,
+        "h": 92
+      },
+      {
+        "id": "AUX1",
+        "label": "AUX 1",
+        "x": 372,
+        "y": 92,
+        "w": 122,
+        "h": 92
+      },
+      {
+        "id": "MER1",
+        "label": "MAIN ENG RM 1",
+        "x": 498,
+        "y": 92,
+        "w": 122,
+        "h": 92
+      },
+      {
+        "id": "MER2",
+        "label": "MAIN ENG RM 2",
+        "x": 624,
+        "y": 92,
+        "w": 122,
+        "h": 92
+      },
+      {
+        "id": "REP5",
+        "label": "REPAIR 5",
+        "x": 750,
+        "y": 92,
+        "w": 122,
+        "h": 92
+      }
+    ],
+    "boundaries": {
+      "MER1": [
+        "AUX1",
+        "MER2"
+      ],
+      "FPR": [
+        "REP2"
+      ],
+      "TOPSIDE": []
+    }
+  }
+}

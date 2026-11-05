@@ -1,0 +1,18 @@
+NOTIONAL DEMO DOCUMENT. NOT NAVY DOCTRINE. NOT FOR OPERATIONAL USE.
+Written for the DORE Afloat concept demo. Demo Ship Alpha is fictional.
+
+DS-CCP-FIRE-01 Rev A: Main Space Fire
+
+1. Purpose
+1.1 This card guides the watch team through the first actions for a fire in a main machinery space.
+
+3. Immediate actions
+3.1 Report the fire to Central Control and sound the alarm. State the space, the class of fire and the source if known.
+3.2 Stop fuel to the affected space. Secure the fuel oil service pumps and close the remote fuel shutoff valves for the affected engine.
+3.3 Secure ventilation to the affected space before setting boundaries.
+3.4 Start Fire Pump 2 to pressurize the firemain for the affected zone.
+3.5 If Fire Pump 2 is unavailable, start Fire Pump 3 and open the firemain cross-connect valve.
+3.5.1 If Fire Pump 3 is also unavailable, start the Emergency Fire Pump and align it to the firemain.
+3.6 Shift electrical load away from generators in the affected space.
+3.7 Set fire boundaries on all six sides of the affected space.
+3.8 Do not release the fixed extinguishing agent until all personnel are accounted for and the space is confirmed isolated.

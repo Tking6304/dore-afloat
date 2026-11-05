@@ -1,0 +1,14 @@
+NOTIONAL DEMO DOCUMENT. NOT NAVY DOCTRINE. NOT FOR OPERATIONAL USE.
+Written for the DORE Afloat concept demo. Demo Ship Alpha is fictional.
+
+DS-CCP-MOB-03 Rev A: Man Overboard
+
+2. Immediate actions
+2.1 Pass the word man overboard and state the side.
+2.2 Post lookouts and keep the person in sight.
+2.3 Mark the position on the navigation display and log the time.
+2.4 Turn the ship toward the side the person fell from to keep the stern clear.
+2.5 Launch the rescue boat using Davit 1.
+2.6 If Davit 1 is unavailable, rig the recovery net and stand by the rescue swimmer.
+2.6.1 If the recovery net is unavailable, rig the Jacob's ladder and stand by the rescue swimmer.
+2.7 Muster all hands and report missing personnel to the bridge.
