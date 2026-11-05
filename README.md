@@ -41,9 +41,20 @@ Keys: **Space** completes the current step, **R** repeats the readout, **B** rea
 
 **PDF PACKET** downloads the whole casualty packet, including the timeline and report draft. It's built on the laptop, so no network is needed.
 
+## Reasoning
+
+Type any casualty, in plain words. DORE works out the hazards, the location and what's missing.
+
+- **Exact match:** if a written procedure fits, DORE uses it.
+- **No exact match:** DORE builds a plan from approved general actions in `library/`, and labels it BUILT with a confidence level. It selects, orders and combines approved steps, but never writes one.
+- **Order of steps:** life safety and isolating the hazard come first. For example, an electrical fire de-energizes the circuit before water is used.
+- **Not a casualty:** questions and non-casualty talk are refused.
+
+The A1 card shows the reasoning and what to ask next. This is rule-based, so it recognizes only the hazards and wording in `library/general.json`.
+
 ## Roles
 
-Each role sees only its own steps, with other stations listed below them. Its assignments and scripts move to the top, and the voice readout covers its own steps. Set which stations belong to a role in `role_stations` in the ship pack.
+Each role sees its own DO NOW step, plus a Who Has What board showing every step with its role, station and status. Its assignments and scripts move to the top, and the voice readout covers its own steps. Set which stations belong to a role in `role_stations` in the ship pack.
 
 ## Voice commands
 

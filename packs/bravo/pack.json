@@ -26,6 +26,52 @@
         "der2",
         "der 2"
       ]
+    },
+    "DER1": {
+      "name": "Diesel Engine Room 1",
+      "aliases": [
+        "diesel engine room 1",
+        "diesel engine room one",
+        "engine room 1",
+        "engine room one",
+        "der1",
+        "der 1"
+      ]
+    },
+    "BERTH": {
+      "name": "Crew Berthing",
+      "aliases": [
+        "crew space",
+        "crew spaces",
+        "crew berthing",
+        "berthing",
+        "crew living",
+        "crew quarters"
+      ]
+    },
+    "GALLEY": {
+      "name": "Galley",
+      "aliases": [
+        "galley",
+        "kitchen",
+        "mess deck"
+      ]
+    },
+    "BRIDGE": {
+      "name": "Bridge",
+      "aliases": [
+        "bridge",
+        "pilot house",
+        "pilothouse"
+      ]
+    },
+    "TOPSIDE": {
+      "name": "Topside",
+      "aliases": [
+        "topside",
+        "weather deck",
+        "main deck"
+      ]
     }
   },
   "sensor_tolerance": {
@@ -44,7 +90,6 @@
         "smoke",
         "burning"
       ],
-      "requires_space": true,
       "severity": "CRITICAL",
       "actions": [
         {
@@ -159,6 +204,13 @@
           "label": "EMERGENCY PUMP FAILS",
           "equipment": "EDFP"
         }
+      ],
+      "hazards": [
+        "fire",
+        "smoke"
+      ],
+      "spaces": [
+        "DER2"
       ]
     }
   ],
@@ -249,6 +301,22 @@
         "h": 38
       },
       {
+        "id": "BERTH",
+        "label": "CREW BERTHING",
+        "x": 220,
+        "y": 12,
+        "w": 190,
+        "h": 38
+      },
+      {
+        "id": "GALLEY",
+        "label": "GALLEY",
+        "x": 416,
+        "y": 12,
+        "w": 120,
+        "h": 38
+      },
+      {
         "id": "TOPSIDE",
         "label": "TOPSIDE",
         "x": 60,
@@ -293,7 +361,26 @@
       "DER2": [
         "DER1",
         "EGEN"
+      ],
+      "BERTH": [
+        "GALLEY",
+        "TOPSIDE"
+      ],
+      "GALLEY": [
+        "BERTH"
       ]
     }
+  },
+  "general_equipment": {
+    "primary_pump": "FP-1",
+    "standby_pump": "EDFP",
+    "emergency_pump": "PFP-1"
+  },
+  "station_map": {
+    "Central Control": "Engineering Watch",
+    "Electrical Watch": "Engineering Watch",
+    "Repair 2": "Fire Party",
+    "Repair 3": "Fire Party",
+    "Repair 5": "Fire Party"
   }
 }

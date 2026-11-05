@@ -1,0 +1,537 @@
+{
+  "document": {
+    "title": "DS-GEN-00 General Casualty Actions",
+    "rev": "Rev A",
+    "file": "general-procedure.txt"
+  },
+  "common": [
+    {
+      "id": "G1",
+      "rank": 10,
+      "owner": "Damage Control Central",
+      "title": "Report the casualty and sound the alarm",
+      "para": "1.1",
+      "quote": "Report the casualty, the space and any injuries to Damage Control Central and sound the alarm."
+    },
+    {
+      "id": "G3",
+      "rank": 90,
+      "owner": "Damage Control Central",
+      "title": "Account for all personnel",
+      "para": "1.3",
+      "quote": "Account for all personnel in and near the affected space."
+    }
+  ],
+  "confirm_location": {
+    "id": "G2",
+    "rank": 15,
+    "owner": "Damage Control Central",
+    "title": "Confirm the exact compartment",
+    "para": "1.2",
+    "quote": "Confirm the exact compartment before sending a response team."
+  },
+  "hazards": [
+    {
+      "id": "electrical",
+      "label": "Electrical Casualty",
+      "serious": true,
+      "words": [
+        "electrical",
+        "electric",
+        "shock",
+        "shocked",
+        "arcing",
+        "arc",
+        "sparks",
+        "sparking",
+        "shorted",
+        "energized",
+        "electrocuted",
+        "breaker",
+        "switchboard"
+      ],
+      "ask": "Is the circuit dead?",
+      "steps": [
+        {
+          "id": "E1",
+          "rank": 20,
+          "owner": "Electrical Watch",
+          "title": "De-energize the circuit first",
+          "para": "5.1",
+          "quote": "De-energize the affected circuit before anyone touches it or applies water."
+        },
+        {
+          "id": "E2",
+          "rank": 25,
+          "owner": "Repair 2",
+          "title": "Keep personnel clear until confirmed dead",
+          "para": "5.2",
+          "quote": "Keep personnel clear until the circuit is confirmed dead."
+        }
+      ]
+    },
+    {
+      "id": "injury",
+      "label": "Injury",
+      "serious": true,
+      "words": [
+        "injured",
+        "injury",
+        "hurt",
+        "bleeding",
+        "burned",
+        "burns",
+        "unconscious",
+        "unresponsive",
+        "trapped",
+        "wounded",
+        "man down",
+        "person down",
+        "sailor down",
+        "not breathing",
+        "broken"
+      ],
+      "steps": [
+        {
+          "id": "I1",
+          "rank": 22,
+          "owner": "Damage Control Central",
+          "title": "Send the medical team",
+          "para": "9.1",
+          "quote": "Send the medical team to the casualty."
+        },
+        {
+          "id": "I2",
+          "rank": 23,
+          "owner": "Repair 2",
+          "title": "Move the injured only if the space is unsafe",
+          "para": "9.2",
+          "quote": "Move an injured person only if the space is unsafe."
+        }
+      ]
+    },
+    {
+      "id": "gas",
+      "label": "Toxic Gas",
+      "serious": true,
+      "words": [
+        "gas",
+        "fumes",
+        "toxic",
+        "ammonia",
+        "chlorine",
+        "refrigerant",
+        "hazmat"
+      ],
+      "ask": "What is the gas, and has the space been cleared?",
+      "steps": [
+        {
+          "id": "T1",
+          "rank": 24,
+          "owner": "Repair 2",
+          "title": "Evacuate, breathing protection for re-entry",
+          "para": "8.1",
+          "quote": "Evacuate the space and require breathing protection before re-entry."
+        },
+        {
+          "id": "T2",
+          "rank": 70,
+          "owner": "Damage Control Central",
+          "title": "Test the atmosphere before declaring safe",
+          "para": "8.2",
+          "quote": "Test the atmosphere before declaring the space safe."
+        }
+      ]
+    },
+    {
+      "id": "steam",
+      "label": "Steam",
+      "serious": true,
+      "words": [
+        "steam"
+      ],
+      "steps": [
+        {
+          "id": "ST1",
+          "rank": 26,
+          "owner": "Central Control",
+          "title": "Isolate the steam, clear the space",
+          "para": "7.1",
+          "quote": "Isolate the steam source and clear personnel from the space."
+        }
+      ]
+    },
+    {
+      "id": "fuel",
+      "label": "Fuel Spill",
+      "serious": true,
+      "words": [
+        "fuel leak",
+        "fuel spill",
+        "oil leak",
+        "oil spill",
+        "fuel spray",
+        "leaking fuel",
+        "leaking oil",
+        "jp-5",
+        "jp5",
+        "spilled fuel",
+        "spilled oil"
+      ],
+      "ask": "What is leaking, and how fast?",
+      "steps": [
+        {
+          "id": "H1",
+          "rank": 28,
+          "owner": "Central Control",
+          "title": "Stop the leak at the isolation valve",
+          "para": "6.1",
+          "quote": "Stop the leak at the nearest isolation valve."
+        },
+        {
+          "id": "H2",
+          "rank": 30,
+          "owner": "Repair 2",
+          "title": "Remove ignition sources",
+          "para": "6.2",
+          "quote": "Remove ignition sources from the area."
+        },
+        {
+          "id": "H3",
+          "rank": 60,
+          "owner": "Repair 3",
+          "title": "Contain the spill, keep personnel clear",
+          "para": "6.3",
+          "quote": "Contain the spill and keep personnel clear."
+        }
+      ]
+    },
+    {
+      "id": "fire",
+      "label": "Fire",
+      "serious": true,
+      "words": [
+        "fire",
+        "fires",
+        "flames",
+        "flame",
+        "burning",
+        "blaze",
+        "explosion",
+        "exploded",
+        "flashover"
+      ],
+      "ask": "What is burning, and what class of fire?",
+      "steps": [
+        {
+          "id": "F1",
+          "rank": 32,
+          "owner": "Repair 2",
+          "title": "Send the duty fire team",
+          "para": "2.1",
+          "quote": "Send the duty fire team with the nearest approved extinguishing agent.",
+          "status": "team"
+        },
+        {
+          "id": "F2",
+          "rank": 34,
+          "owner": "Central Control",
+          "title": "Secure ventilation and power to the space",
+          "para": "2.2",
+          "quote": "Secure ventilation and non-essential power to the affected space.",
+          "status": "ventilation"
+        },
+        {
+          "id": "F3",
+          "rank": 36,
+          "owner": "Repair 5",
+          "title": "Start {primary_pump}",
+          "para": "2.3",
+          "quote": "Start the primary fire pump for the affected zone.",
+          "needs": [
+            "@primary_pump"
+          ],
+          "status": "firemain"
+        },
+        {
+          "id": "F4",
+          "rank": 37,
+          "owner": "Repair 5",
+          "title": "Start {standby_pump}",
+          "para": "2.4",
+          "quote": "If the primary fire pump is unavailable, start the standby fire pump.",
+          "needs": [
+            "@standby_pump"
+          ],
+          "only_if_blocked": "F3",
+          "status": "firemain"
+        },
+        {
+          "id": "F5",
+          "rank": 38,
+          "owner": "Repair 5",
+          "title": "Start {emergency_pump}",
+          "para": "2.5",
+          "quote": "If the standby fire pump is unavailable, start the emergency fire pump.",
+          "needs": [
+            "@emergency_pump"
+          ],
+          "only_if_blocked": "F4",
+          "status": "firemain"
+        },
+        {
+          "id": "F6",
+          "rank": 50,
+          "owner": "Repair 3",
+          "title": "Set fire boundaries",
+          "para": "2.6",
+          "quote": "Set fire boundaries around the affected space.",
+          "status": "boundaries"
+        }
+      ],
+      "inject": {
+        "id": "standby",
+        "label": "STANDBY PUMP FAILS",
+        "equipment": "@standby_pump"
+      }
+    },
+    {
+      "id": "smoke",
+      "label": "Smoke",
+      "serious": false,
+      "words": [
+        "smoke",
+        "smoky",
+        "smoking",
+        "smell of smoke",
+        "burning smell"
+      ],
+      "ask": "Where is the smoke coming from?",
+      "steps": [
+        {
+          "id": "S1",
+          "rank": 31,
+          "owner": "Repair 2",
+          "title": "Treat smoke as fire until source is found",
+          "para": "3.1",
+          "quote": "Treat smoke as a fire until the source is found."
+        },
+        {
+          "id": "S2",
+          "rank": 33,
+          "owner": "Repair 2",
+          "title": "Require breathing protection in smoke",
+          "para": "3.2",
+          "quote": "Require breathing protection for anyone entering smoke."
+        }
+      ]
+    },
+    {
+      "id": "flooding",
+      "label": "Flooding",
+      "serious": true,
+      "words": [
+        "flooding",
+        "flooded",
+        "flood",
+        "water coming in",
+        "taking on water",
+        "taking water",
+        "hull breach",
+        "pipe burst",
+        "burst pipe",
+        "ruptured pipe"
+      ],
+      "ask": "How fast is the water rising?",
+      "steps": [
+        {
+          "id": "W1",
+          "rank": 27,
+          "owner": "Repair 2",
+          "title": "Find the source, report the rate of rise",
+          "para": "4.1",
+          "quote": "Find the source of the flooding and report the rate of rise."
+        },
+        {
+          "id": "W2",
+          "rank": 29,
+          "owner": "Central Control",
+          "title": "Secure power that could contact water",
+          "para": "4.2",
+          "quote": "Secure electrical power that could contact the water."
+        },
+        {
+          "id": "W3",
+          "rank": 40,
+          "owner": "Repair 2",
+          "title": "Start dewatering",
+          "para": "4.3",
+          "quote": "Start dewatering with the nearest approved pump."
+        },
+        {
+          "id": "W4",
+          "rank": 50,
+          "owner": "Repair 3",
+          "title": "Set flooding boundaries",
+          "para": "4.4",
+          "quote": "Set flooding boundaries around the affected space.",
+          "status": "boundaries"
+        }
+      ]
+    },
+    {
+      "id": "power",
+      "label": "Loss of Power",
+      "serious": false,
+      "words": [
+        "lost power",
+        "loss of power",
+        "power loss",
+        "blackout",
+        "power is out",
+        "power out",
+        "power failure"
+      ],
+      "steps": [
+        {
+          "id": "P1",
+          "rank": 20,
+          "owner": "Central Control",
+          "title": "Report it, shift to the alternate source",
+          "para": "10.1",
+          "quote": "Report the loss of power to the Bridge and shift to the alternate source."
+        }
+      ],
+      "shipwide": true
+    },
+    {
+      "id": "steering",
+      "label": "Loss of Steering",
+      "serious": true,
+      "words": [
+        "lost steering",
+        "loss of steering",
+        "steering casualty",
+        "steering failure",
+        "rudder jam",
+        "rudder jammed",
+        "no steering"
+      ],
+      "steps": [
+        {
+          "id": "N1",
+          "rank": 20,
+          "owner": "Bridge",
+          "title": "Shift steering, warn nearby traffic",
+          "para": "11.1",
+          "quote": "Shift to the alternate steering station and warn nearby traffic."
+        }
+      ],
+      "shipwide": true
+    }
+  ],
+  "magazine": {
+    "words": [
+      "magazine",
+      "ammunition",
+      "ammo",
+      "ordnance"
+    ],
+    "step": {
+      "id": "X1",
+      "rank": 21,
+      "owner": "Damage Control Central",
+      "title": "Report magazine temperature, prepare sprinkling",
+      "para": "12.1",
+      "quote": "Report the magazine temperature and prepare the sprinkling system."
+    }
+  },
+  "comms": [
+    {
+      "channel": "1MC Announcement",
+      "speaker": "Bridge",
+      "text": "{hazard}, {hazard}, {hazard}. {hazard} reported in {location}. All hands stand clear of {location}."
+    },
+    {
+      "channel": "Report to Bridge",
+      "speaker": "Damage Control Central",
+      "text": "Bridge, DCC. {hazard_list} reported in {location}. Response team is being sent. {status}"
+    },
+    {
+      "channel": "Report to Repair Locker",
+      "speaker": "Damage Control Central",
+      "text": "Repair locker, DCC. Investigate {location}. Report what you find. {status}"
+    }
+  ],
+  "location_words": [
+    "space",
+    "room",
+    "compartment",
+    "berthing",
+    "galley",
+    "passageway",
+    "laundry",
+    "wardroom",
+    "mess",
+    "deck",
+    "hangar",
+    "locker",
+    "workshop",
+    "shop",
+    "storeroom",
+    "office",
+    "head",
+    "bilge",
+    "tank",
+    "pantry",
+    "sickbay",
+    "stateroom",
+    "gym",
+    "lounge",
+    "void",
+    "trunk",
+    "magazine",
+    "cabin",
+    "quarters"
+  ],
+  "not_a_casualty": [
+    "fire control",
+    "fire the",
+    "fire a ",
+    "fire at",
+    "fire drill",
+    "fired",
+    "firing",
+    "open fire",
+    "fire away",
+    "drill tomorrow",
+    "drill last",
+    "drill next",
+    "gun",
+    "missile",
+    "torpedo",
+    "weapon",
+    "oven",
+    "shut down the",
+    "steam line inspection",
+    "how do i",
+    "how do you",
+    "how to",
+    "what is",
+    "what are",
+    "who is",
+    "when is",
+    "where is the",
+    "why is",
+    "can you",
+    "tell me"
+  ],
+  "negations": [
+    "no ",
+    "not ",
+    "without ",
+    "negative ",
+    "there is no ",
+    "isn't any "
+  ]
+}

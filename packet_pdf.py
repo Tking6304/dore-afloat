@@ -159,6 +159,12 @@ def build_packet(incident, records, audit_status, debrief):
     distrust = [f"{s['name']}: {s['value']} {s['unit']} ({', '.join(s['problems'])})" for s in triage["sensors"] if not s["trusted"]]
     pdf.field("Do not trust", "; ".join(distrust) or "None", RED if distrust else INK)
 
+    why = triage["reasoning"]
+    pdf.field("Confidence", why["confidence"] + (" (built from general procedures, confirm before acting)" if why["built"] else ""), ORANGE if why["built"] else GREEN)
+    pdf.field("Reasoning", " ".join(why["lines"]))
+    if why["ask"]:
+        pdf.field("Ask next", " ".join(why["ask"]), ORANGE)
+
     pdf.heading("Immediate actions", RED, "AGENT 2")
     for step in actions["steps"]:
         cite = step["citation"]

@@ -49,7 +49,74 @@
       "aliases": [
         "topside",
         "flight deck",
-        "fantail"
+        "fantail",
+        "weather deck",
+        "main deck",
+        "foc'sle",
+        "forecastle"
+      ]
+    },
+    "AUX1": {
+      "name": "Auxiliary Machinery Room 1",
+      "aliases": [
+        "auxiliary machinery room 1",
+        "aux 1",
+        "aux1",
+        "aux room"
+      ]
+    },
+    "MER2": {
+      "name": "Main Engine Room 2",
+      "aliases": [
+        "main engine room 2",
+        "main engine room two",
+        "engine room 2",
+        "engine room two",
+        "mer2",
+        "mer 2"
+      ]
+    },
+    "BERTH": {
+      "name": "Crew Berthing",
+      "aliases": [
+        "crew space",
+        "crew spaces",
+        "crew berthing",
+        "berthing",
+        "crew living",
+        "crew quarters",
+        "sleeping quarters"
+      ]
+    },
+    "GALLEY": {
+      "name": "Galley",
+      "aliases": [
+        "galley",
+        "kitchen",
+        "mess deck",
+        "scullery"
+      ]
+    },
+    "REP2": {
+      "name": "Repair 2",
+      "aliases": [
+        "repair 2",
+        "repair two"
+      ]
+    },
+    "REP5": {
+      "name": "Repair 5",
+      "aliases": [
+        "repair 5",
+        "repair five"
+      ]
+    },
+    "BRIDGE": {
+      "name": "Bridge",
+      "aliases": [
+        "bridge",
+        "pilot house",
+        "pilothouse"
       ]
     }
   },
@@ -71,7 +138,6 @@
         "burning",
         "flashover"
       ],
-      "requires_space": true,
       "severity": "CRITICAL",
       "actions": [
         {
@@ -218,6 +284,13 @@
           "label": "FIRE PUMP 3 FAILS",
           "equipment": "FP-3"
         }
+      ],
+      "hazards": [
+        "fire",
+        "smoke"
+      ],
+      "spaces": [
+        "MER1"
       ]
     },
     {
@@ -228,11 +301,9 @@
       "keywords": [
         "collision",
         "collided",
-        "struck",
         "rammed",
-        "flooding"
+        "allision"
       ],
-      "requires_space": false,
       "default_space": "FPR",
       "severity": "CRITICAL",
       "actions": [
@@ -349,7 +420,8 @@
           "label": "DEWATERING PUMP FAILS",
           "equipment": "PDP-1"
         }
-      ]
+      ],
+      "always": true
     },
     {
       "id": "man-overboard",
@@ -360,7 +432,6 @@
         "overboard",
         "mob"
       ],
-      "requires_space": false,
       "default_space": "TOPSIDE",
       "severity": "CRITICAL",
       "actions": [
@@ -477,7 +548,8 @@
           "label": "RECOVERY NET FOULED",
           "equipment": "NET-1"
         }
-      ]
+      ],
+      "always": true
     }
   ],
   "equipment": [
@@ -673,6 +745,22 @@
         "h": 38
       },
       {
+        "id": "GALLEY",
+        "label": "GALLEY",
+        "x": 426,
+        "y": 12,
+        "w": 120,
+        "h": 38
+      },
+      {
+        "id": "BERTH",
+        "label": "CREW BERTHING",
+        "x": 552,
+        "y": 12,
+        "w": 190,
+        "h": 38
+      },
+      {
         "id": "TOPSIDE",
         "label": "TOPSIDE",
         "x": 60,
@@ -737,7 +825,28 @@
       "FPR": [
         "REP2"
       ],
-      "TOPSIDE": []
+      "TOPSIDE": [],
+      "BERTH": [
+        "GALLEY",
+        "TOPSIDE"
+      ],
+      "GALLEY": [
+        "BERTH",
+        "BRIDGE"
+      ],
+      "AUX1": [
+        "REP2",
+        "MER1"
+      ],
+      "MER2": [
+        "MER1",
+        "REP5"
+      ]
     }
+  },
+  "general_equipment": {
+    "primary_pump": "FP-2",
+    "standby_pump": "FP-3",
+    "emergency_pump": "EFP-1"
   }
 }

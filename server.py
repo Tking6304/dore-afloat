@@ -24,6 +24,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from packet_pdf import build_packet
+from reasoner import LIBRARY, LIBRARY_TEXT, reason
 
 ROOT = Path(__file__).parent
 PACKS = ROOT / "packs"
@@ -118,8 +119,9 @@ def load_pack(pack_id):
     folder = PACKS / pack_id
     pack = json.loads((folder / "pack.json").read_text(encoding="utf-8"))
     pack["id"] = pack_id
+    pack["documents"]["GEN"] = LIBRARY["document"]
     pack["source_text"] = {
-        key: (folder / doc["file"]).read_text(encoding="utf-8")
+        key: LIBRARY_TEXT if key == "GEN" else (folder / doc["file"]).read_text(encoding="utf-8")
         for key, doc in pack["documents"].items()
     }
     return pack
@@ -132,27 +134,6 @@ def list_packs():
 def citation(pack, doc_key, para, quote):
     doc = pack["documents"][doc_key]
     return {"doc": doc_key, "title": doc["title"], "rev": doc["rev"], "para": para, "quote": quote}
-
-
-def match_report(pack, text):
-    """Pick the casualty with the most keyword hits, and find the space and side."""
-    low = normalize(text)
-    words = set(re.findall(r"[a-z0-9]+", low))
-    scored = [(sum(k in words for k in c["keywords"]), c) for c in pack["casualties"]]
-    score, casualty = max(scored, key=lambda pair: pair[0])
-    if not score:
-        return None, None, None, False
-    space_id = None
-    for sid, space in pack["spaces"].items():
-        if any(re.search(r"\b" + re.escape(a) + r"\b", low) for a in space["aliases"]):
-            space_id = sid
-            break
-    if not space_id:
-        if casualty["requires_space"]:
-            return None, None, None, True
-        space_id = casualty["default_space"]
-    side = next((s for s in ("port", "starboard") if s in words), None)
-    return casualty, space_id, side, True
 
 
 # ---------- The agents ----------
@@ -179,14 +160,13 @@ def unavailable(pack, failed=()):
     return down
 
 
-def agent_triage(pack, casualty, space_id, side, report, failed=(), reported_at=None):
+def agent_triage(pack, casualty, understood, report, failed=(), reported_at=None):
     """A1: classify the casualty and pull ship state for this space."""
     needed = {n for a in casualty["actions"] for n in a["needs"]}
     names = {e["id"]: e for e in pack["equipment"]}
     down = unavailable(pack, failed)
-    location = pack["spaces"][space_id]["name"]
-    if side:
-        location = f"{side.capitalize()} side"
+    space_id, side = understood["space_id"], understood["side"]
+    location = f"{side.capitalize()} side" if side else understood["location"] or "Location unknown"
     tagouts = [
         {"id": down[e]["id"], "equipment": names[e]["name"], "reason": down[e]["reason"],
          "authorized_by": down[e]["authorized_by"], "kind": down[e]["kind"]}
@@ -205,6 +185,7 @@ def agent_triage(pack, casualty, space_id, side, report, failed=(), reported_at=
         "equipment": equipment,
         "tagouts": tagouts,
         "sensors": check_sensors(pack, space_id),
+        "reasoning": understood["reasoning"],
     }
 
 
@@ -397,9 +378,7 @@ def payload():
     if not incident:
         return {"id": 0, "ver": 0}
     keys = ("id", "ver", "drill", "triage", "actions", "tasking", "comms", "timings", "total_ms", "changes", "map")
-    pack = load_pack(incident["pack"])
-    casualty = next(c for c in pack["casualties"] if c["id"] == incident["casualty_id"])
-    injects = [{"id": i["id"], "label": i["label"]} for i in casualty.get("injects", []) if i["equipment"] not in incident["failed"]]
+    injects = [{"id": i["id"], "label": i["label"]} for i in incident["casualty"].get("injects", []) if i["equipment"] not in incident["failed"]]
     return {**{k: incident[k] for k in keys}, "kind": "answer", "records": agent_records(),
             "done": [d["id"] for d in incident["done"]], "ended": incident["ended"], "injects": injects,
             "debrief": agent_debrief() if incident["ended"] else None}
@@ -424,11 +403,12 @@ def overdue_steps():
 
 def run_agents(user, report, drill=False):
     pack = load_pack(user["pack"])
-    casualty, space_id, side, recognized = match_report(pack, report)
+    casualty, understood = reason(pack, report)
     if not casualty:
         audit(user["name"], user["role"], "REFUSED", {"report": report})
-        hint = "State what you see and the space." if recognized else "DORE answers only from approved documents in this ship pack."
-        return {"kind": "refusal", "message": "No approved procedure found", "hint": hint}
+        return {"kind": "refusal", "message": "No approved procedure found",
+                "hint": "DORE answers only from approved documents. State the hazard you see and the space."}
+    space_id, side = understood["space_id"], understood["side"]
 
     timings = {}
 
@@ -440,7 +420,7 @@ def run_agents(user, report, drill=False):
         return result
 
     audit(user["name"], user["role"], "DRILL_REPORT" if drill else "REPORT", {"report": report})
-    triage = timed("A1_TRIAGE", agent_triage, pack, casualty, space_id, side, report)
+    triage = timed("A1_TRIAGE", agent_triage, pack, casualty, understood, report)
     actions = timed("A2_ACTIONS", agent_actions, pack, casualty, side)
     tasking = timed("A3_TASKING", agent_tasking, actions)
     comms = timed("A4_COMMS", agent_comms, casualty, triage, actions, side)
@@ -448,7 +428,7 @@ def run_agents(user, report, drill=False):
     incident.clear()
     incident.update({
         "id": counters["incident"], "ver": 1, "drill": bool(drill), "started": time.time(),
-        "pack": pack["id"], "ship": pack["ship"]["name"], "casualty_id": casualty["id"],
+        "pack": pack["id"], "ship": pack["ship"]["name"], "casualty": casualty, "understood": understood,
         "space_id": space_id, "side": side, "triage": triage, "actions": actions,
         "tasking": tasking, "comms": comms, "name": user["name"], "role": user["role"],
         "done": [], "failed": [], "changes": [], "overdue_logged": [], "ended": False, "ended_at": None, "ended_s": 0,
@@ -465,14 +445,14 @@ def replan(user, inject_id):
     if not incident or incident["ended"]:
         return 400, {"error": "No open casualty"}
     pack = load_pack(incident["pack"])
-    casualty = next(c for c in pack["casualties"] if c["id"] == incident["casualty_id"])
+    casualty = incident["casualty"]
     inject = next((i for i in casualty.get("injects", []) if i["id"] == inject_id), None)
     if not inject or inject["equipment"] in incident["failed"]:
         return 400, {"error": "Nothing to change"}
     start = time.perf_counter()
     incident["failed"].append(inject["equipment"])
     failed, side = incident["failed"], incident["side"]
-    triage = agent_triage(pack, casualty, incident["space_id"], side, incident["triage"]["report"], failed, incident["triage"]["time"])
+    triage = agent_triage(pack, casualty, incident["understood"], incident["triage"]["report"], failed, incident["triage"]["time"])
     actions = agent_actions(pack, casualty, side, failed)
     incident.update({"triage": triage, "actions": actions, "tasking": agent_tasking(actions),
                      "comms": agent_comms(casualty, triage, actions, side),

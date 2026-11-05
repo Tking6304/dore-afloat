@@ -152,11 +152,37 @@ main { max-width: 1560px; margin: 0 auto; padding: 16px 24px 40px; display: grid
 .tl td:last-child { color: var(--green); font-weight: 700; }
 .tl .miss td:last-child { color: var(--red); }
 .tl small { display: block; font: 11px var(--mono); color: var(--quiet); }
+.built { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; padding: 7px 16px; background: rgba(255,215,0,.12); border-bottom: 1px solid var(--yellow); color: #fff0a0; font-size: 16px; font-weight: 700; }
+.built i { font: normal 700 11px var(--disp); letter-spacing: 1px; color: var(--yellow); }
+.built b { margin-left: auto; font: 12px var(--mono); color: var(--yellow); }
+.why { padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid var(--dim); }
+.why h4 { display: flex; justify-content: space-between; gap: 8px; font: 700 11px var(--disp); letter-spacing: 1px; color: var(--blue); margin: 6px 0 3px; }
+.why em { font: normal 11px var(--mono); }
+.why .c-high { color: var(--green); }
+.why .c-medium { color: var(--yellow); }
+.why .c-low { color: var(--red); }
+.why p { font-size: 15.5px; font-weight: 600; line-height: 1.25; }
+.why .ask { color: var(--yellow); }
+.board { padding: 8px 16px 10px; }
+.board h4 { font: 700 11px var(--disp); letter-spacing: 2px; color: var(--quiet); margin-bottom: 4px; }
+.brow { display: grid; grid-template-columns: 26px minmax(0, 1fr) 96px 170px 84px; gap: 8px; align-items: baseline; padding: 4px 6px; border-bottom: 1px solid var(--dim); font-size: 16px; font-weight: 600; color: var(--quiet); }
+.brow b { font: 700 13px var(--disp); }
+.brow .role { font: 700 11px var(--disp); letter-spacing: 1px; color: var(--orange); }
+.brow .station { font: 12px var(--mono); color: var(--text); }
+.brow .state { font: 12px var(--mono); text-align: right; }
+.brow.minerow { color: var(--bright); background: rgba(0,170,255,.07); }
+.brow.now-row { background: rgba(255,60,60,.14); color: var(--bright); }
+.brow.now-row .state { color: #ff8a8a; }
+.brow.late-row .state { color: var(--orange); font-weight: 700; }
+.brow.ok .what { text-decoration: line-through; }
+.brow.ok .state { color: var(--green); }
+@media (max-width: 760px) { .brow { grid-template-columns: 26px minmax(0, 1fr) 84px; } .brow .station { grid-column: 2; } .brow .state { grid-column: 3; grid-row: 1 / 3; } }
 .idle { display: grid; place-items: center; min-height: 296px; text-align: center; padding: 20px; }
 .idle h3 { font: 700 22px var(--disp); letter-spacing: 4px; color: var(--dim); }
 .idle p { color: var(--quiet); font: 14px var(--mono); margin-top: 8px; }
 .refuse h3 { color: var(--yellow); letter-spacing: 2px; }
-.allclear h3 { font: 900 34px var(--disp); color: var(--green); letter-spacing: 3px; }
+.idle.allclear { min-height: 120px; }
+.allclear h3 { font: 900 26px var(--disp); color: var(--green); letter-spacing: 3px; }
 .trust { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 7px 16px; font: 12px var(--mono); letter-spacing: 1px; color: var(--quiet); border-top: 1px solid var(--dim); }
 .trust b { color: var(--green); font-weight: 400; }
 .trust .warn { color: var(--yellow); }
@@ -243,7 +269,7 @@ mark { background: var(--yellow); color: #1c1600; }
   <button class="ctl on" id="voice" aria-pressed="true">VOICE ON</button>
 </header>
 <div class="demo">CONCEPT DEMO // FICTIONAL SHIPS // NOTIONAL PROCEDURES // SYNTHETIC DATA // NOT FOR OPERATIONAL USE</div>
-<div class="banner" id="banner"><span class="badge" id="sev"></span><b id="bannerText"></b><span id="injects"></span><button class="endb" id="endBtn" type="button" hidden>END CASUALTY</button><span class="elapsed" id="elapsed">00:00</span></div>
+<div class="banner" id="banner"><span class="badge" id="sev"></span><b id="bannerText"></b><span class="heard" id="built" hidden>BUILT PLAN</span><span id="injects"></span><button class="endb" id="endBtn" type="button" hidden>END CASUALTY</button><span class="elapsed" id="elapsed">00:00</span></div>
 
 <main>
   <div class="trigger full">
@@ -342,12 +368,31 @@ function isMySeat(owner) { const st = stations(); return !!st && st[0] === owner
 function mine() { return run.actions.steps.filter(s => isMine(s.owner)); }
 function others() { return run.actions.steps.filter(s => !isMine(s.owner)); }
 function current() { return mine().find(s => !doneIds.has(s.id)); }
+function roleFor(owner) {
+  const map = config.packs.find(p => p.id === me.pack).role_stations;
+  return Object.keys(map).find(role => map[role].includes(owner)) || 'UNASSIGNED';
+}
+function responsible(step) { return `${roleFor(step.owner)}, ${step.owner}`; }
+function nextOpen() { return run.actions.steps.find(s => !doneIds.has(s.id)); }
+function renderBoard(currentStep) {
+  const rows = run.actions.steps.map(s => {
+    const finished = doneIds.has(s.id), late = overdue.find(o => o.id === s.id);
+    const state = finished ? 'DONE' : late ? `LATE ${late.late_s} S` : s === currentStep ? (config.roles[me.role].confirm ? 'YOUR STEP' : 'NEXT') : `DUE ${s.due_s} S`;
+    const kind = finished ? 'ok' : late ? 'late-row' : s === currentStep ? 'now-row' : '';
+    return `<div class="brow ${kind} ${isMine(s.owner) ? 'minerow' : ''}"><b>${s.order}</b><span class="what">${esc(s.title)}</span><span class="role">${esc(roleFor(s.owner))}</span><span class="station">${esc(s.owner)}</span><span class="state">${esc(state)}</span></div>`;
+  }).join('');
+  return `<div class="board"><h4>Who Has What</h4>${rows}</div>`;
+}
 function briefing() {
   const t = run.triage, todo = mine().filter(s => !doneIds.has(s.id));
   const parts = [`${me.role}. ${t.casualty}. ${t.location}.`];
+  if (t.reasoning.built) parts.push('No exact procedure. Built from general actions. Confirm before acting.');
   run.actions.blocked.forEach(b => parts.push(`Warning. ${b.equipment} is ${b.kind === 'FAILED' ? 'failed' : 'tagged out'}.`));
   if (todo.length) { parts.push('Do now.'); todo.slice(0, 3).forEach((s, i) => parts.push(`${i + 1}. ${s.title}.`)); }
-  else parts.push('No open steps for your station. Stand by.');
+  else {
+    const next = nextOpen();
+    parts.push(next ? `No open steps for you. Next step belongs to ${responsible(next)}: ${next.title}.` : 'All steps are complete.');
+  }
   return parts.join(' ');
 }
 
@@ -377,23 +422,23 @@ function renderNow() {
   const canConfirm = config.roles[me.role].confirm && !run.ended;
   const alerts = a.blocked.map(b => `<div class="alert"><i>${esc(b.kind)}</i><span>${esc(b.equipment)}${b.kind === 'FAILED' ? '' : ` (${esc(b.tagout)})`}</span>${b.use_instead ? `<span class="arrow">USE: ${esc(b.use_instead)}</span>` : ''}${cite(b.citation)}</div>`)
     .concat(run.triage.sensors.filter(s => !s.trusted).map(s => `<div class="alert distrust"><i>DO NOT TRUST</i><span>${esc(s.name)}: ${esc(s.value)} ${esc(s.unit)}</span><small>${esc(s.problems.join(', '))}</small></div>`)).join('');
-  const late = overdue.map(o => `<div class="late"><i>OVERDUE ${o.late_s} S</i><span>${esc(o.title)}</span><b>${isMySeat(o.owner) ? 'YOUR STEP: DO IT NOW' : 'CALL: ' + esc(o.script)}</b></div>`).join('');
+  const why = run.triage.reasoning;
+  const basis = why.built ? `<div class="built"><i>BUILT FROM GENERAL PROCEDURES</i><span>No exact procedure. Confirm before acting.</span><b>CONFIDENCE: ${esc(why.confidence)}</b></div>` : '';
+  const late = overdue.map(o => `<div class="late"><i>OVERDUE ${o.late_s} S</i><span>${esc(o.title)}</span><b>${isMySeat(o.owner) ? 'YOUR STEP: DO IT NOW' : `CALL ${esc(roleFor(o.owner))}: ${esc(o.script)}`}</b></div>`).join('');
   const change = run.changes.length ? `<div class="change"><i>PLAN CHANGED</i><span>${esc(run.changes[run.changes.length - 1].note)}</span><small>Re-planned in ${run.changes[run.changes.length - 1].ms} ms</small></div>` : '';
   const finished = list.filter(s => doneIds.has(s.id)).length;
   const head = `<div class="nowhead"><span class="tag">A2</span><h2>Do Now: ${esc(me.role)}</h2><small>${list.length ? `${finished} of ${list.length} done for your station` : 'No steps for your station'}</small></div>`;
   const total = a.steps.length + a.blocked.length;
   const trust = `<div class="trust"><span><b>${total} OF ${total + a.dropped.length}</b> DRAFTS VERIFIED AGAINST SOURCE</span>${a.dropped.map(d => `<span class="warn">BLOCKED DRAFT: ${esc(d.title)} (QUOTE NOT IN SOURCE)</span>`).join('')}</div>`;
-  const rest = list.map((s, i) => s === step ? '' : `<div class="${doneIds.has(s.id) ? 'ok' : ''}"><b>${i + 1}</b><span>${esc(s.title)}</span></div>`).join('');
-  const elsewhere = others().map(s => `<div class="${doneIds.has(s.id) ? 'ok' : ''}"><em>${esc(s.owner)}</em><span>${esc(s.title)}</span></div>`).join('');
   $('now').className = 'now ' + (run.ended ? 'clear' : step ? 'live' : 'clear');
   const button = canConfirm ? '<button class="done-btn" id="doneBtn" type="button">DONE<kbd>SPACE</kbd></button>' : `<span class="viewonly">${run.ended ? 'SECURED' : 'VIEW ONLY'}</span>`;
   const title = run.ended ? 'CASUALTY SECURED' : list.length ? 'YOUR STEPS COMPLETE' : 'STAND BY';
-  const line = run.ended ? 'See the debrief' : list.length ? 'Log and handoff are up to date' : 'Other stations have the lead on this casualty';
+  const waiting = nextOpen();
+  const line = run.ended ? 'See the debrief' : waiting ? `Next step: ${waiting.title} (${responsible(waiting)})` : 'All steps complete. Log and handoff are up to date';
   const body = step && !run.ended
     ? `<div class="cur"><div class="num">${list.indexOf(step) + 1}</div><div><h3>${esc(step.title)}</h3><div class="who"><span>${esc(step.owner.toUpperCase())}</span><span id="due" data-due="${step.due_s}"></span>${cite(step.citation)}</div></div>${button}</div>`
     : `<div class="idle allclear"><div><h3>${title}</h3><p>${line}</p></div></div>`;
-  $('now').innerHTML = head + body + late + change + `<div class="alerts">${alerts}</div>` + `<div class="next">${rest}</div>` +
-    (elsewhere ? `<div class="elsewhere"><h4>Other stations</h4><div class="next quiet">${elsewhere}</div></div>` : '') + trust;
+  $('now').innerHTML = head + basis + body + late + change + `<div class="alerts">${alerts}</div>` + renderBoard(step) + trust;
   updateDue();
 }
 function updateDue() {
@@ -404,7 +449,10 @@ function updateDue() {
   d.className = left >= 0 ? 'due' : 'due over';
 }
 function renderTriage(t) {
-  $('b1').innerHTML = `<dl class="kv"><dt>Casualty</dt><dd class="hot">${esc(t.casualty)}</dd><dt>Location</dt><dd>${esc(t.location)}</dd><dt>Reported</dt><dd>${esc(t.time)}</dd><dt>Report</dt><dd>${esc(t.report)}</dd>
+  const why = t.reasoning;
+  const reasoning = `<div class="why"><h4>Reasoning <em class="c-${esc(why.confidence.toLowerCase())}">${esc(why.confidence)} CONFIDENCE</em></h4>${why.lines.map(l => `<p>${esc(l)}</p>`).join('')}
+    ${why.ask.length ? `<h4>Ask next</h4>${why.ask.map(q => `<p class="ask">${esc(q)}</p>`).join('')}` : ''}</div>`;
+  $('b1').innerHTML = reasoning + `<dl class="kv"><dt>Casualty</dt><dd class="hot">${esc(t.casualty)}</dd><dt>Location</dt><dd>${esc(t.location)}</dd><dt>Reported</dt><dd>${esc(t.time)}</dd><dt>Report</dt><dd>${esc(t.report)}</dd>
     <dt>Out of service</dt><dd class="${t.tagouts.length ? 'hot' : ''}">${t.tagouts.map(x => esc(`${x.equipment}: ${x.kind === 'FAILED' ? 'failed' : x.id + ', ' + x.reason}`)).join('<br>') || 'None'}</dd>
     <dt>Equipment</dt><dd>${t.equipment.filter(e => !['Tagged out', 'Failed'].includes(e.state)).map(e => esc(`${e.name} (${e.state})`)).join('<br>') || 'None listed'}</dd></dl>`;
   $('sensors').innerHTML = t.sensors.map(s => `<div class="sensor ${s.trusted ? '' : 'badrow'}"><span>${esc(s.name)} ${esc(s.value)} ${esc(s.unit)}</span><em>${s.trusted ? 'TRUST' : 'DO NOT TRUST'}</em></div>`).join('') || '<p class="empty">No sensors for this casualty</p>';
@@ -412,12 +460,13 @@ function renderTriage(t) {
 function renderTasking(k) {
   const mineTeam = t => !!(stations() && stations().includes(t.station));
   const teams = k.teams.slice().sort((x, y) => mineTeam(y) - mineTeam(x));
-  $('b3').innerHTML = teams.map(t => `<div class="team ${mineTeam(t) ? 'yours' : ''}"><strong>${esc(t.station.toUpperCase())}${mineTeam(t) ? ' // YOUR STATION' : ''}</strong>${t.tasks.map(x => `<div><span>${esc(x.title)}</span><small>${esc(x.ref)}</small></div>`).join('')}</div>`).join('');
+  const seat = t => `${esc(roleFor(t.station))} // ${esc(t.station.toUpperCase())}`;
+  $('b3').innerHTML = teams.map(t => `<div class="team ${mineTeam(t) ? 'yours' : ''}"><strong>${seat(t)}${mineTeam(t) ? ' // YOUR STATION' : ''}</strong>${t.tasks.map(x => `<div><span>${esc(x.title)}</span><small>${esc(x.ref)}</small></div>`).join('')}</div>`).join('');
 }
 function renderComms(c) {
   const speaking = m => !!(stations() && stations().includes(m.speaker));
   const list = c.messages.slice().sort((x, y) => speaking(y) - speaking(x));
-  $('b4').innerHTML = list.map(m => `<div class="msg ${speaking(m) ? 'yours' : ''}"><span>${speaking(m) ? 'YOU SAY // ' : esc(m.speaker) + ' // '}${esc(m.channel)}</span><p>${esc(m.text)}</p></div>`).join('');
+  $('b4').innerHTML = list.map(m => `<div class="msg ${speaking(m) ? 'yours' : ''}"><span>${speaking(m) ? 'YOU SAY // ' : esc(roleFor(m.speaker)) + ' SAYS // '}${esc(m.channel)}</span><p>${esc(m.text)}</p></div>`).join('');
 }
 function renderRecords(r) {
   $('b5').innerHTML = `<div class="subhead">WATCH LOG</div>${r.watch_log.map(l => `<div class="logline">${esc(l)}</div>`).join('')}
@@ -442,6 +491,7 @@ function renderInjects() {
 }
 function renderBanner() {
   $('sev').textContent = run.drill ? 'DRILL' : run.triage.severity + ' CASUALTY';
+  $('built').hidden = !run.triage.reasoning.built;
   $('sev').className = 'badge ' + (run.drill ? 'drill' : '');
   $('bannerText').textContent = `${run.triage.casualty.toUpperCase()} // ${run.triage.location.toUpperCase()}`;
   $('banner').classList.add('on');
@@ -543,8 +593,8 @@ async function stepDone() {
   const data = await post('/api/done', { step: step.id });
   stepBusy = false;
   if (!data) return;
-  const next = current();
-  speak(next ? `Next. ${next.title}.` : 'Your steps are complete.');
+  const next = current(), other = nextOpen();
+  speak(next ? `Next. ${next.title}.` : other ? `Your steps are complete. Next step belongs to ${responsible(other)}.` : 'All steps are complete.');
 }
 async function logStatus(key) {
   const data = await post('/api/status', { key });
@@ -555,7 +605,7 @@ function announceOverdue() {
   const item = overdue.find(o => isMine(o.owner) && !spokenOverdue.has(o.id));
   if (!item) return;
   spokenOverdue.add(item.id);
-  speak(isMySeat(item.owner) ? `Overdue. ${item.title}.` : `Overdue. ${item.title}. Call ${item.owner}.`);
+  speak(isMySeat(item.owner) ? `Overdue. ${item.title}.` : `Overdue. ${item.title}. Call ${responsible(item)}.`);
 }
 async function pollState() {
   try {
