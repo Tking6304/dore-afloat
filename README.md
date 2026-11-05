@@ -37,7 +37,9 @@ All ships, procedures and data are fictional and notional. Nothing here is Navy 
 
 Step clocks are short for the demo: the first step is due at 30 seconds, then 15 seconds more per step.
 
-Keys: **Space** completes the current step, **R** repeats the readout, **B** reads the watch brief, and **V** is push-to-talk.
+**RESPONSE SUMMARY** shows the timeline, who has each step, what needs attention and the report draft at any time, live or in a drill, and before or after the casualty is secured.
+
+Keys: **Space** completes the current step, **R** repeats the readout, **B** reads the watch brief, **S** opens the response summary, and **V** is push-to-talk.
 
 **PDF PACKET** downloads the whole casualty packet, including the timeline and report draft. It's built on the laptop, so no network is needed.
 
@@ -68,6 +70,7 @@ Voice is push-to-talk, like a radio. Hold **V** or the on-screen label, wait for
 | "DORE step complete" | Completes the current step |
 | "DORE repeat the steps" | Repeats the readout |
 | "DORE watch brief" | Reads the watch brief |
+| "DORE response summary" | Opens the response summary |
 | "DORE log boundaries set" | Logs that report. Also "fuel secured", "ventilation secured", "firemain pressurized" and "lookouts posted" |
 | "DORE casualty is secured" | Ends the casualty and opens the debrief |
 

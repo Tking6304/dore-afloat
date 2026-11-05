@@ -14,6 +14,7 @@ $commands = @{
     "door step complete"                           = "done"
     "door repeat the steps"                        = "repeat"
     "door watch brief"                             = "brief"
+    "door response summary"                        = "summary"
     "door casualty is secured"                     = "end"
     "door log boundaries set"                      = "status_boundaries"
     "door log fuel secured"                        = "status_fuel"

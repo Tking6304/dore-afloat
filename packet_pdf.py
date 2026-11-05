@@ -211,8 +211,8 @@ def build_packet(incident, records, audit_status, debrief):
     for label, value in records["ics201"]:
         pdf.field(label, value)
 
-    pdf.heading("After-action timeline", BLUE, "AGENT 6")
-    pdf.paragraph(f"{debrief['on_time']} on time, {debrief['late']} late, {debrief['open']} open, out of {debrief['total']} steps.", size=10, font="bold")
+    pdf.heading("Response summary", BLUE, "AGENT 6")
+    pdf.paragraph(f"{debrief['on_time']} on time, {debrief['late']} late, {debrief['open']} open ({debrief['overdue']} overdue), out of {debrief['total']} steps.", size=10, font="bold")
     for row in debrief["rows"]:
         result = row["result"] if row["done_s"] is None else f"{row['result']} at {row['done_s']} s"
         color = GREEN if row["result"] == "On time" else RED

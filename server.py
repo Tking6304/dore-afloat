@@ -39,7 +39,7 @@ VOICE_RELEASE_S = 2.5  # Recognition finishes just after the talk key is release
 VOICE_LATE_S = 8  # A result may arrive this long after release if its speech began during the hold.
 VOICE_MIN_SPEECH_S = 0.7  # Shorter sound can't be a whole command.
 VOICE_COMMANDS = {"fire", "collision", "overboard", "overboard_port", "overboard_starboard", "done", "repeat",
-                  "brief", "end", "status_boundaries", "status_fuel", "status_ventilation", "status_firemain", "status_lookouts"}
+                  "brief", "summary", "end", "status_boundaries", "status_fuel", "status_ventilation", "status_firemain", "status_lookouts"}
 VOICE_TOKEN = secrets.token_hex(16)  # Only the listener this server starts can send commands.
 
 # Policy gate: which roles may do what. Enforced here, never in the browser.
@@ -52,7 +52,7 @@ ROLES = {
 
 sessions = {}  # token -> {"name", "role", "pack"}
 incident = {}  # the open incident
-counters = {"incident": 0}
+counters = {"incident": int(time.time())}  # Unique across restarts, so open screens notice a new casualty.
 voice = {"queue": [], "listener": None, "level": 0, "peak": 0, "heard": [],
          "armed": False, "armed_at": 0.0, "released_at": 0.0, "armed_until": 0.0, "next_ok": 0.0}  # Heard text stays in memory only.
 db = sqlite3.connect(DB_PATH, check_same_thread=False)
@@ -299,18 +299,24 @@ def agent_debrief():
         return None
     triage = incident["triage"]
     done = {d["id"]: d for d in incident["done"]}
+    length = incident["ended_s"] if incident["ended"] else round(time.time() - incident["started"])
     rows = []
     for step in incident["actions"]["steps"]:
         record = done.get(step["id"])
-        late = bool(record and record["elapsed_s"] > step["due_s"])
+        if record:
+            result = "Late" if record["elapsed_s"] > step["due_s"] else "On time"
+        else:
+            result = "Overdue" if length > step["due_s"] else "Open"
         rows.append({"order": step["order"], "title": step["title"], "owner": step["owner"], "due_s": step["due_s"],
-                     "done_s": record["elapsed_s"] if record else None,
-                     "result": "Open" if not record else "Late" if late else "On time"})
+                     "done_s": record["elapsed_s"] if record else None, "result": result})
     on_time = sum(r["result"] == "On time" for r in rows)
     late = sum(r["result"] == "Late" for r in rows)
-    still_open = sum(r["result"] == "Open" for r in rows)
-    practice = [f"{r['title']} ({r['owner']})" for r in rows if r["result"] != "On time"][:3]
-    length = incident["ended_s"] if incident["ended"] else round(time.time() - incident["started"])
+    overdue = sum(r["result"] == "Overdue" for r in rows)
+    still_open = sum(r["result"] in ("Open", "Overdue") for r in rows)
+    # While the casualty is open, a step that isn't due yet isn't a miss.
+    judged = len(rows) if incident["ended"] else on_time + late + overdue
+    missed = ("Late", "Overdue", "Open") if incident["ended"] else ("Late", "Overdue")
+    practice = [f"{r['title']} ({r['owner']})" for r in rows if r["result"] in missed][:3]
     report = [
         ["Ship", incident["ship"]],
         ["Casualty", triage["casualty"]],
@@ -324,9 +330,10 @@ def agent_debrief():
         ["Actions open", "; ".join(r["title"] for r in rows if r["result"] == "Open") or "None"],
         ["Status", "Secured" if incident["ended"] else "Open"],
     ]
-    return {"rows": rows, "on_time": on_time, "late": late, "open": still_open, "total": len(rows),
-            "score": round(100 * on_time / len(rows)) if rows else 0, "practice": practice,
-            "length_s": length, "drill": incident["drill"], "report": report}
+    return {"rows": rows, "on_time": on_time, "late": late, "overdue": overdue, "open": still_open, "total": len(rows),
+            "score": round(100 * on_time / judged) if judged else 100, "practice": practice, "length_s": length,
+            "drill": incident["drill"], "ended": incident["ended"], "report": report,
+            "changes": [c["note"] for c in incident["changes"]], "casualty": triage["casualty"], "location": triage["location"]}
 
 
 def agent_brief(user):
@@ -586,6 +593,14 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(200, {"id": incident.get("id", 0), "ver": incident.get("ver", 0), "overdue": overdue_steps(),
                                  "elapsed": round(time.time() - incident["started"]) if incident else 0,
                                  "full": payload() if have != current else None})
+        elif path == "/api/summary":
+            user = self.user()
+            if not user:
+                return self.send_json(401, {"error": "Sign in first."})
+            if not incident:
+                return self.send_json(400, {"error": "Run a casualty first"})
+            audit(user["name"], user["role"], "SUMMARY_VIEWED", {"ended": incident["ended"]})
+            self.send_json(200, agent_debrief())
         elif path == "/api/brief":
             user = self.user()
             if not user:

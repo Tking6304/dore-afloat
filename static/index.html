@@ -35,7 +35,6 @@ header { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; pad
 .heard { font: 12px var(--mono); letter-spacing: 1px; padding: 6px 10px; border: 1px solid var(--dim); color: var(--quiet); }
 .heard.on { color: var(--blue); border-color: var(--blue); }
 .heard.flash { color: #02150e; background: var(--green); border-color: var(--green); }
-.demo { text-align: center; font: 12px var(--mono); letter-spacing: 1px; color: var(--yellow); padding: 3px 10px; background: rgba(255,215,0,.07); border-bottom: 1px solid rgba(255,215,0,.2); }
 .banner { display: none; align-items: center; gap: 14px; padding: 10px 24px; background: linear-gradient(90deg, rgba(255,60,60,.2), rgba(255,60,60,.04)); border-bottom: 1px solid rgba(255,60,60,.45); animation: slide .3s ease-out; }
 .banner.on { display: flex; flex-wrap: wrap; }
 .badge { background: var(--red); color: #fff; font: 700 11px var(--disp); letter-spacing: 2px; padding: 4px 12px; animation: pulse 1s infinite; }
@@ -140,6 +139,9 @@ main { max-width: 1560px; margin: 0 auto; padding: 16px 24px 40px; display: grid
 #map .m-use { fill: var(--green); font-weight: 700; }
 #map .casualty rect { fill: rgba(255,60,60,.32); stroke: var(--red); stroke-width: 2.5; animation: pulse 1s infinite; }
 #map .boundary rect { fill: rgba(255,122,0,.14); stroke: var(--orange); stroke-width: 2; stroke-dasharray: 6 4; }
+.sumline { font: 14px var(--mono); color: var(--text); letter-spacing: 1px; margin-top: 8px; }
+.tl .wait-row td:last-child { color: var(--quiet); }
+.tl .seat { font: 700 11px var(--disp); color: var(--orange); }
 .dialog.wide { width: min(860px, 100%); border-color: var(--yellow); }
 .dialog.wide h2 { color: var(--yellow); }
 .score { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 12px 0; }
@@ -245,7 +247,7 @@ mark { background: var(--yellow); color: #1c1600; }
 @media (max-width: 1080px) { main { grid-template-columns: minmax(0,1fr); } .flow { grid-template-columns: repeat(3,1fr); } .grid { grid-template-columns: minmax(0,1fr); } .cur { grid-template-columns: auto 1fr; } .done-btn { grid-column: 1 / -1; } .cur h3 { font-size: 32px; } }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 @media print {
-  header, .demo, .trigger, .flow, aside, .done-btn, .trust, body::after { display: none !important; }
+  header, .trigger, .flow, aside, .done-btn, .trust, body::after { display: none !important; }
   body { background: #fff; color: #000; }
   main { display: block; padding: 0; }
   .card, .now, .banner { break-inside: avoid; background: #fff !important; color: #000; border: 1px solid #000 !important; box-shadow: none !important; max-height: none; margin-bottom: 10px; }
@@ -268,8 +270,7 @@ mark { background: var(--yellow); color: #1c1600; }
   <button class="ctl" id="drill" type="button">DRILL OFF</button>
   <button class="ctl on" id="voice" aria-pressed="true">VOICE ON</button>
 </header>
-<div class="demo">CONCEPT DEMO // FICTIONAL SHIPS // NOTIONAL PROCEDURES // SYNTHETIC DATA // NOT FOR OPERATIONAL USE</div>
-<div class="banner" id="banner"><span class="badge" id="sev"></span><b id="bannerText"></b><span class="heard" id="built" hidden>BUILT PLAN</span><span id="injects"></span><button class="endb" id="endBtn" type="button" hidden>END CASUALTY</button><span class="elapsed" id="elapsed">00:00</span></div>
+<div class="banner" id="banner"><span class="badge" id="sev"></span><b id="bannerText"></b><span class="heard" id="built" hidden>BUILT PLAN</span><span id="injects"></span><button class="endb" id="summaryBtn" type="button">RESPONSE SUMMARY</button><button class="endb" id="endBtn" type="button" hidden>END CASUALTY</button><span class="elapsed" id="elapsed">00:00</span></div>
 
 <main>
   <div class="trigger full">
@@ -502,18 +503,27 @@ function renderAll() {
   renderComms(run.comms); renderRecords(run.records); renderMap(run.map);
   [1, 3, 4, 5].forEach(i => $('c' + i).classList.add('lit'));
   $('ms').textContent = run.total_ms;
-  if (run.ended) { setNode(6, 'done', 'DONE'); if (debriefShown !== run.id) { debriefShown = run.id; renderDebrief(run.debrief); } }
+  if (run.ended) { setNode(6, 'done', 'DONE'); if (debriefShown !== run.id) { debriefShown = run.id; renderDebrief(run.debrief, true); } }
 }
-function renderDebrief(d) {
-  const rows = d.rows.map(r => `<tr class="${r.result === 'On time' ? '' : 'miss'}"><td>${r.order}</td><td>${esc(r.title)}<small>${esc(r.owner)}</small></td><td>${r.due_s} s</td><td>${r.done_s === null ? '--' : r.done_s + ' s'}</td><td>${esc(r.result)}</td></tr>`).join('');
-  $('debriefBody').innerHTML = `<div class="score"><div><b>${d.score}%</b><span>STEPS ON TIME</span></div><div><b>${d.on_time}</b><span>ON TIME</span></div><div><b>${d.late}</b><span>LATE</span></div><div><b>${d.open}</b><span>OPEN</span></div><div><b>${clock(d.length_s)}</b><span>TOTAL TIME</span></div></div>
-    <table class="tl"><tr><th>#</th><th>Step</th><th>Due</th><th>Done</th><th>Result</th></tr>${rows}</table>
-    ${d.practice.length ? `<div class="subhead">PRACTICE NEXT</div>${d.practice.map(p => `<div class="logline">${esc(p)}</div>`).join('')}` : ''}
+function renderDebrief(d, announce) {
+  const rows = d.rows.map(r => `<tr class="${r.result === 'On time' ? '' : r.result === 'Open' ? 'wait-row' : 'miss'}"><td>${r.order}</td><td>${esc(r.title)}</td><td class="seat">${esc(roleFor(r.owner))}<small>${esc(r.owner)}</small></td><td>${r.due_s} s</td><td>${r.done_s === null ? '--' : r.done_s + ' s'}</td><td>${esc(r.result)}</td></tr>`).join('');
+  const label = d.ended ? 'STEPS ON TIME' : 'ON TIME SO FAR';
+  $('debriefBody').innerHTML = `<p class="sumline">${esc(d.casualty)} // ${esc(d.location)} // ${d.ended ? 'SECURED' : 'IN PROGRESS'}</p>
+    <div class="score"><div><b>${d.score}%</b><span>${label}</span></div><div><b>${d.on_time}</b><span>ON TIME</span></div><div><b>${d.late}</b><span>LATE</span></div><div><b>${d.open}</b><span>OPEN${d.overdue ? ` (${d.overdue} OVERDUE)` : ''}</span></div><div><b>${clock(d.length_s)}</b><span>TOTAL TIME</span></div></div>
+    <table class="tl"><tr><th>#</th><th>Step</th><th>Who</th><th>Due</th><th>Done</th><th>Result</th></tr>${rows}</table>
+    ${d.changes.length ? `<div class="subhead">PLAN CHANGES</div>${d.changes.map(c => `<div class="logline">${esc(c)}</div>`).join('')}` : ''}
+    ${d.practice.length ? `<div class="subhead">${d.ended ? 'PRACTICE NEXT' : 'NEEDS ATTENTION NOW'}</div>${d.practice.map(p => `<div class="logline">${esc(p)}</div>`).join('')}` : ''}
     <div class="subhead">CASUALTY REPORT DRAFT</div><dl class="kv">${d.report.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
     <p class="empty" style="margin-top:8px">Draft for review. Not a formal Navy report.</p>`;
-  $('debriefTitle').textContent = d.drill ? 'DRILL DEBRIEF' : 'AFTER-ACTION DEBRIEF';
+  $('debriefTitle').textContent = `RESPONSE SUMMARY // ${d.drill ? 'DRILL' : 'LIVE'}`;
   $('debrief').hidden = false;
-  speak(`${d.drill ? 'Drill' : 'Casualty'} complete. ${d.score} percent of steps on time.`);
+  if (announce) speak(`${d.drill ? 'Drill' : 'Casualty'} complete. ${d.score} percent of steps on time.`);
+}
+async function openSummary() {
+  const { status, data } = await api('/api/summary');
+  if (status !== 200) return toast(data.error);
+  renderDebrief(data, false);
+  refreshAudit();
 }
 function clearScreen() {
   run = null; doneIds = new Set(); overdue = []; started = 0; changesSeen = 0; spokenOverdue.clear();
@@ -678,6 +688,7 @@ document.addEventListener('keydown', e => {
   if (e.code === 'Space') { e.preventDefault(); stepDone(); }
   if (e.key === 'r' && run) speak(briefing());
   if (e.key === 'b') loadBrief(true);
+  if (e.key === 's' && run) openSummary();
   if (e.key.toLowerCase() === 'v' && !e.repeat) talk(true);
 });
 $('say').addEventListener('submit', e => { e.preventDefault(); $('report').blur(); activate($('report').value); });
@@ -703,6 +714,7 @@ $('drill').addEventListener('click', e => {
 });
 $('briefBtn').addEventListener('click', () => loadBrief(true));
 $('endBtn').addEventListener('click', () => post('/api/end', {}));
+$('summaryBtn').addEventListener('click', openSummary);
 $('srcClose').addEventListener('click', () => { $('src').hidden = true; });
 $('debriefClose').addEventListener('click', () => { $('debrief').hidden = true; });
 $('debriefPdf').addEventListener('click', downloadPdf);
@@ -726,6 +738,7 @@ function runCommand(command) {
   else if (command === 'done') stepDone();
   else if (command === 'repeat' && run) speak(briefing());
   else if (command === 'brief') loadBrief(true);
+  else if (command === 'summary' && run) openSummary();
   else if (command === 'end') post('/api/end', {});
   else if (STATUS_WORDS[command]) logStatus(STATUS_WORDS[command]);
 }
