@@ -307,7 +307,7 @@ def agent_debrief():
             result = "Late" if record["elapsed_s"] > step["due_s"] else "On time"
         else:
             result = "Overdue" if length > step["due_s"] else "Open"
-        rows.append({"order": step["order"], "title": step["title"], "owner": step["owner"], "due_s": step["due_s"],
+        rows.append({"id": step["id"], "order": step["order"], "title": step["title"], "owner": step["owner"], "due_s": step["due_s"],
                      "done_s": record["elapsed_s"] if record else None, "result": result})
     on_time = sum(r["result"] == "On time" for r in rows)
     late = sum(r["result"] == "Late" for r in rows)
@@ -387,7 +387,7 @@ def payload():
     keys = ("id", "ver", "drill", "triage", "actions", "tasking", "comms", "timings", "total_ms", "changes", "map")
     injects = [{"id": i["id"], "label": i["label"]} for i in incident["casualty"].get("injects", []) if i["equipment"] not in incident["failed"]]
     return {**{k: incident[k] for k in keys}, "kind": "answer", "records": agent_records(),
-            "done": [d["id"] for d in incident["done"]], "ended": incident["ended"], "injects": injects,
+            "done": [d["id"] for d in incident["done"]], "done_detail": incident["done"], "ended": incident["ended"], "injects": injects,
             "debrief": agent_debrief() if incident["ended"] else None}
 
 

@@ -166,6 +166,15 @@ main { max-width: 1560px; margin: 0 auto; padding: 16px 24px 40px; display: grid
 .why p { font-size: 15.5px; font-weight: 600; line-height: 1.25; }
 .why .ask { color: var(--yellow); }
 .board { padding: 8px 16px 10px; }
+.board h4 em { font: normal 11px var(--mono); letter-spacing: 0; color: var(--quiet); margin-left: 8px; }
+.brow, .tl tr[data-step] { cursor: pointer; }
+.brow:hover, .brow:focus-visible, .tl tr[data-step]:hover, .tl tr[data-step]:focus-visible { outline: 1px solid var(--blue); background: rgba(0,170,255,.12); }
+.brow.blocked-row { color: #ff8a8a; }
+.brow.blocked-row .role, .brow.blocked-row .state { color: var(--red); }
+#stepView { z-index: 61; }
+#src { z-index: 62; }
+#stepBody .kv { margin-top: 12px; grid-template-columns: 120px 1fr; }
+#stepBody blockquote { margin: 12px 0 8px; padding: 8px 12px; border-left: 3px solid var(--yellow); color: var(--bright); font-size: 18px; font-weight: 600; }
 .board h4 { font: 700 11px var(--disp); letter-spacing: 2px; color: var(--quiet); margin-bottom: 4px; }
 .brow { display: grid; grid-template-columns: 26px minmax(0, 1fr) 96px 170px 84px; gap: 8px; align-items: baseline; padding: 4px 6px; border-bottom: 1px solid var(--dim); font-size: 16px; font-weight: 600; color: var(--quiet); }
 .brow b { font: 700 13px var(--disp); }
@@ -316,6 +325,7 @@ mark { background: var(--yellow); color: #1c1600; }
 
 <div class="overlay" id="src" hidden><div class="dialog"><div style="display:flex;justify-content:space-between;gap:10px"><h2 id="srcTitle"></h2><button class="ctl" id="srcClose">CLOSE</button></div><pre id="srcText"></pre></div></div>
 <div class="overlay" id="debrief" hidden><div class="dialog wide"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h2 id="debriefTitle"></h2><span><button class="ctl on" id="debriefPdf" type="button">PDF PACKET</button> <button class="ctl" id="debriefClose" type="button">CLOSE</button></span></div><div id="debriefBody"></div></div></div>
+<div class="overlay" id="stepView" hidden><div class="dialog"><div style="display:flex;justify-content:space-between;gap:10px"><h2 id="stepTitle"></h2><button class="ctl" id="stepClose" type="button">CLOSE</button></div><div id="stepBody"></div></div></div>
 <div id="toast" role="alert"></div>
 
 <script>
@@ -375,14 +385,32 @@ function roleFor(owner) {
 }
 function responsible(step) { return `${roleFor(step.owner)}, ${step.owner}`; }
 function nextOpen() { return run.actions.steps.find(s => !doneIds.has(s.id)); }
+function stepDetail(id) {
+  const step = run.actions.steps.find(s => s.id === id), block = run.actions.blocked.find(b => b.id === id);
+  const record = (run.done_detail || []).find(d => d.id === id), late = overdue.find(o => o.id === id);
+  const item = step || block;
+  if (!item) return;
+  const status = block ? block.kind : record ? 'Complete' : late ? `Overdue by ${late.late_s} s` : 'Open';
+  const fields = [['Status', status]];
+  if (step) fields.push(['Responsible', responsible(step)], ['Due', `${step.due_s} s after the report`]);
+  if (block) fields.push(['Equipment', `${block.equipment} (${block.tagout})`], ['Reason', block.reason], ['Use instead', block.use_instead || 'No approved substitute']);
+  if (record) fields.push(['Completed', `${record.at}, ${record.elapsed_s} s after the report`], ['By', `${record.role} ${record.verb}`]);
+  if (step && step.fallback) fields.push(['Why this step', 'The primary step was blocked, so this is the next approved option.']);
+  const source = step ? step.citation : block.citation;
+  $('stepTitle').textContent = step ? `STEP ${step.order}: ${step.title}` : `BLOCKED: ${block.title}`;
+  $('stepBody').innerHTML = `<dl class="kv">${fields.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
+    <blockquote>${esc(source.quote)}</blockquote>${cite(source, `Open ${source.title}, ${source.rev}, para ${source.para}`)}`;
+  $('stepView').hidden = false;
+}
 function renderBoard(currentStep) {
   const rows = run.actions.steps.map(s => {
     const finished = doneIds.has(s.id), late = overdue.find(o => o.id === s.id);
     const state = finished ? 'DONE' : late ? `LATE ${late.late_s} S` : s === currentStep ? (config.roles[me.role].confirm ? 'YOUR STEP' : 'NEXT') : `DUE ${s.due_s} S`;
     const kind = finished ? 'ok' : late ? 'late-row' : s === currentStep ? 'now-row' : '';
-    return `<div class="brow ${kind} ${isMine(s.owner) ? 'minerow' : ''}"><b>${s.order}</b><span class="what">${esc(s.title)}</span><span class="role">${esc(roleFor(s.owner))}</span><span class="station">${esc(s.owner)}</span><span class="state">${esc(state)}</span></div>`;
+    return `<div class="brow ${kind} ${isMine(s.owner) ? 'minerow' : ''}" role="button" tabindex="0" data-step="${esc(s.id)}" aria-label="Open step ${s.order}"><b>${s.order}</b><span class="what">${esc(s.title)}</span><span class="role">${esc(roleFor(s.owner))}</span><span class="station">${esc(s.owner)}</span><span class="state">${esc(state)}</span></div>`;
   }).join('');
-  return `<div class="board"><h4>Who Has What</h4>${rows}</div>`;
+  const blocked = run.actions.blocked.map(b => `<div class="brow blocked-row" role="button" tabindex="0" data-step="${esc(b.id)}" aria-label="Open blocked step"><b>X</b><span class="what">${esc(b.title)}</span><span class="role">BLOCKED</span><span class="station">${esc(b.equipment)}</span><span class="state">${esc(b.kind)}</span></div>`).join('');
+  return `<div class="board"><h4>Who Has What <em>Select any step for its record</em></h4>${rows}${blocked}</div>`;
 }
 function briefing() {
   const t = run.triage, todo = mine().filter(s => !doneIds.has(s.id));
@@ -506,7 +534,7 @@ function renderAll() {
   if (run.ended) { setNode(6, 'done', 'DONE'); if (debriefShown !== run.id) { debriefShown = run.id; renderDebrief(run.debrief, true); } }
 }
 function renderDebrief(d, announce) {
-  const rows = d.rows.map(r => `<tr class="${r.result === 'On time' ? '' : r.result === 'Open' ? 'wait-row' : 'miss'}"><td>${r.order}</td><td>${esc(r.title)}</td><td class="seat">${esc(roleFor(r.owner))}<small>${esc(r.owner)}</small></td><td>${r.due_s} s</td><td>${r.done_s === null ? '--' : r.done_s + ' s'}</td><td>${esc(r.result)}</td></tr>`).join('');
+  const rows = d.rows.map(r => `<tr class="${r.result === 'On time' ? '' : r.result === 'Open' ? 'wait-row' : 'miss'}" role="button" tabindex="0" data-step="${esc(r.id)}"><td>${r.order}</td><td>${esc(r.title)}</td><td class="seat">${esc(roleFor(r.owner))}<small>${esc(r.owner)}</small></td><td>${r.due_s} s</td><td>${r.done_s === null ? '--' : r.done_s + ' s'}</td><td>${esc(r.result)}</td></tr>`).join('');
   const label = d.ended ? 'STEPS ON TIME' : 'ON TIME SO FAR';
   $('debriefBody').innerHTML = `<p class="sumline">${esc(d.casualty)} // ${esc(d.location)} // ${d.ended ? 'SECURED' : 'IN PROGRESS'}</p>
     <div class="score"><div><b>${d.score}%</b><span>${label}</span></div><div><b>${d.on_time}</b><span>ON TIME</span></div><div><b>${d.late}</b><span>LATE</span></div><div><b>${d.open}</b><span>OPEN${d.overdue ? ` (${d.overdue} OVERDUE)` : ''}</span></div><div><b>${clock(d.length_s)}</b><span>TOTAL TIME</span></div></div>
@@ -679,12 +707,16 @@ async function downloadPdf() {
 
 document.addEventListener('click', e => {
   const c = e.target.closest('.cite'); if (c) return openSource(c);
+  const row = e.target.closest('[data-step]'); if (row && run && !String(getSelection())) return stepDetail(row.dataset.step);
   const b = e.target.closest('.cas'); if (b) return activate(b.dataset.report);
   const i = e.target.closest('.inject'); if (i) return post('/api/inject', { inject: i.dataset.inject });
   if (e.target.closest('#doneBtn')) stepDone();
 });
 document.addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  const open = ['src', 'stepView', 'debrief'].find(id => !$(id).hidden);
+  if (open) { if (e.key === 'Escape') $(open).hidden = true; else if (e.key === 'Enter' && e.target.dataset.step) stepDetail(e.target.dataset.step); return; }
+  if (e.key === 'Enter' && e.target.dataset.step) return stepDetail(e.target.dataset.step);
   if (e.code === 'Space') { e.preventDefault(); stepDone(); }
   if (e.key === 'r' && run) speak(briefing());
   if (e.key === 'b') loadBrief(true);
@@ -715,6 +747,7 @@ $('drill').addEventListener('click', e => {
 $('briefBtn').addEventListener('click', () => loadBrief(true));
 $('endBtn').addEventListener('click', () => post('/api/end', {}));
 $('summaryBtn').addEventListener('click', openSummary);
+$('stepClose').addEventListener('click', () => { $('stepView').hidden = true; });
 $('srcClose').addEventListener('click', () => { $('src').hidden = true; });
 $('debriefClose').addEventListener('click', () => { $('debrief').hidden = true; });
 $('debriefPdf').addEventListener('click', downloadPdf);

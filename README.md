@@ -56,7 +56,7 @@ The A1 card shows the reasoning and what to ask next. This is rule-based, so it 
 
 ## Roles
 
-Each role sees its own DO NOW step, plus a Who Has What board showing every step with its role, station and status. Its assignments and scripts move to the top, and the voice readout covers its own steps. Set which stations belong to a role in `role_stations` in the ship pack.
+Each role sees its own DO NOW step, plus a Who Has What board showing every step with its role, station and status. Select any step, past or future, to see who did it, when, and the source text. Its assignments and scripts move to the top, and the voice readout covers its own steps. Set which stations belong to a role in `role_stations` in the ship pack.
 
 ## Voice commands
 
